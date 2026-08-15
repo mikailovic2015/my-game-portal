@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Космический Бур</title>
+    <style>
+        body { background: #09090b; color: #a855f7; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
+        h2 { margin: 5px 0; color: #c084fc; }
+        .stats { font-size: 20px; color: #38bdf8; font-weight: bold; margin-bottom: 12px; }
+        .mine-btn { width: 150px; height: 150px; background: #18181b; border: 4px solid #a855f7; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; user-select: none; box-shadow: 0 0 25px rgba(168,85,247,0.3); transition: 0.05s; }
+        .mine-btn:active { transform: scale(0.92); border-color: #38bdf8; }
+        .shop { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 12px; width: 100%; max-width: 340px; margin-top: 15px; }
+        .shop h3 { color: #facc15; margin: 0 0 8px 0; font-size: 13px; text-align: center; }
+        .btn { background: #27272a; color: #fff; border: none; padding: 7px; border-radius: 6px; width: 100%; margin-top: 5px; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; }
+        .btn:hover { background: #3f3f46; }
+        a { color: #38bdf8; text-decoration: none; font-size: 13px; margin-top: 15px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <h2>🚀 КОСМО-БУР</h2>
+    <div class="stats" id="crystals">0 кристаллов</div>
+    
+    <div class="mine-btn" onclick="mine()">
+        <div style="font-size: 50px;">☄️</div>
+        <div style="font-size: 11px; color: #a855f7; margin-top: 4px;">БУРИТЬ</div>
+    </div>
+
+    <div class="shop">
+        <h3>🛒 МОДУЛИ КОРАБЛЯ</h3>
+        <button class="btn" onclick="buy('laser')"><span>🔥 Плазмобур (+1/клик)</span><span id="c1" style="color:#a855f7;">40 кр.</span></button>
+        <button class="btn" onclick="buy('drone')"><span>🛸 Дрон-шахтер (+2/сек)</span><span id="c2" style="color:#a855f7;">120 кр.</span></button>
+        <button class="btn" onclick="buy('station')"><span>🛰️ Станция (+10/сек)</span><span id="c3" style="color:#a855f7;">600 кр.</span></button>
+    </div>
+
+    <a href="../../">← На главную портала</a>
+
+    <script>
+        let crystals = 0, power = 1, autoRate = 0;
+        let costs = { laser: 40, drone: 120, station: 600 };
+
+        function mine() { crystals += power; update(); }
+
+        function buy(item) {
+            if (crystals >= costs[item]) {
+                crystals -= costs[item];
+                if (item === 'laser') { power++; costs[item] = Math.floor(costs[item] * 1.5); }
+                else if (item === 'drone') { autoRate += 2; costs[item] = Math.floor(costs[item] * 1.6); }
+                else if (item === 'station') { autoRate += 10; costs[item] = Math.floor(costs[item] * 1.7); }
+                update();
+            }
+        }
+
+        setInterval(() => { if (autoRate > 0) { crystals += autoRate; update(); } }, 1000);
+
+        function update() {
+            document.getElementById('crystals').innerText = crystals + ' кристаллов';
+            document.getElementById('c1').innerText = costs.laser + ' кр.';
+            document.getElementById('c2').innerText = costs.drone + ' кр.';
+            document.getElementById('c3').innerText = costs.station + ' кр.';
+        }
+    </script>
+</body>
+</html>

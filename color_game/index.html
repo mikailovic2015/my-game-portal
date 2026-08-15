@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🎨 Цветовая игра</title>
+    <style>
+        * { box-sizing: border-box; touch-action: manipulation; }
+        body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 15px 10px; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .container { width: 100%; max-width: 440px; background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+        .back-link { display: block; text-align: left; color: #58a6ff; text-decoration: none; margin-bottom: 15px; font-size: 14px; font-weight: bold; }
+        
+        .title { font-size: 22px; font-weight: 800; color: #f0f6fc; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        
+        .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #010409; border: 1px solid #30363d; padding: 10px; border-radius: 10px; margin-bottom: 15px; text-align: center; }
+        .stat-item { display: flex; flex-direction: column; }
+        .stat-label { font-size: 11px; color: #8b949e; font-weight: bold; text-transform: uppercase; }
+        .stat-val { font-size: 16px; font-weight: 800; color: #58a6ff; }
+        
+        .timer-container { width: 100%; background: #010409; border-radius: 8px; border: 1px solid #30363d; padding: 3px; margin-bottom: 15px; }
+        .timer-bar { height: 8px; background: linear-gradient(90deg, #238636, #d29922, #f85149); border-radius: 6px; width: 100%; transition: width 0.1s linear; }
+        
+        .instruction { font-size: 13px; color: #8b949e; margin-bottom: 10px; font-weight: bold; }
+        
+        .color-target { background: #010409; border: 1px solid #30363d; border-radius: 14px; padding: 25px 10px; font-size: 32px; font-weight: 900; letter-spacing: 2px; margin-bottom: 20px; min-height: 100px; display: flex; align-items: center; justify-content: center; transition: transform 0.1s ease; user-select: none; }
+        .shake { animation: shake 0.3s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .color-btn { width: 100%; border: none; font-size: 15px; font-weight: 800; padding: 16px 10px; border-radius: 12px; cursor: pointer; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); transition: all 0.15s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .color-btn:active { transform: scale(0.95); }
+        
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(13, 17, 23, 0.95); border-radius: 16px; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .restart-btn { background: linear-gradient(135deg, #1f6feb, #238636); color: white; border: none; padding: 14px 28px; font-size: 16px; font-weight: 800; border-radius: 10px; cursor: pointer; text-transform: uppercase; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="/" class="back-link">← На главную</a>
+    <div class="title">🎨 Цветовая игра</div>
+
+    <div class="stats-bar">
+        <div class="stat-item"><span class="stat-label">Счет</span><span class="stat-val" id="score_val">0</span></div>
+        <div class="stat-item"><span class="stat-label">Рекорд</span><span class="stat-val" id="high_score_val">0</span></div>
+        <div class="stat-item"><span class="stat-label">Комбо</span><span class="stat-val" id="combo_val">x1</span></div>
+    </div>
+
+    <div class="timer-container">
+        <div class="timer-bar" id="timer_bar"></div>
+    </div>
+
+    <div class="instruction">Нажимай на название ЦВЕТА ТЕКСТА!</div>
+
+    <div class="color-target" id="target_word">ГОТОВ?</div>
+
+    <div class="options-grid" id="options_grid"></div>
+
+    <div class="overlay" id="game_over_box">
+        <h2 style="color: #f85149; margin: 0 0 10px 0;">ВРЕМЯ ВЫШЛО!</h2>
+        <p style="font-size: 18px; margin: 5px 0;" id="final_score">Счет: 0</p>
+        <p style="font-size: 14px; color: #8b949e;" id="record_msg"></p>
+        <button class="restart-btn" onclick="startGame()">⚡ Играть снова</button>
+    </div>
+</div>
+
+<script>
+const COLOR_PALETTE = [
+    { name: "КРАСНЫЙ", hex: "#f85149" },
+    { name: "ЗЕЛЕНЫЙ", hex: "#3fb950" },
+    { name: "СИНИЙ", hex: "#58a6ff" },
+    { name: "ЖЕЛТЫЙ", hex: "#d29922" }
+];
+
+let score = 0;
+let highScore = localStorage.getItem("color_game_high") || 0;
+let combo = 1;
+let timeLeft = 100;
+let timerInterval = null;
+let currentCorrectIndex = -1;
+let isPlaying = false;
+
+document.getElementById("high_score_val").innerText = highScore;
+
+function startGame() {
+    score = 0;
+    combo = 1;
+    timeLeft = 100;
+    isPlaying = true;
+    
+    document.getElementById("score_val").innerText = score;
+    document.getElementById("combo_val").innerText = "x" + combo;
+    document.getElementById("game_over_box").style.display = "none";
+    
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        timeLeft -= 1.2;
+        if (timeLeft <= 0) {
+            timeLeft = 0;
+            endGame();
+        }
+        document.getElementById("timer_bar").style.width = timeLeft + "%";
+    }, 100);
+
+    nextQuestion();
+}
+
+function nextQuestion() {
+    if (!isPlaying) return;
+
+    let wordObj = COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)];
+    let colorObj = COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)];
+    
+    currentCorrectIndex = COLOR_PALETTE.findIndex(c => c.hex === colorObj.hex);
+
+    const targetEl = document.getElementById("target_word");
+    targetEl.innerText = wordObj.name;
+    targetEl.style.color = colorObj.hex;
+    targetEl.style.textShadow = `0 0 15px ${colorObj.hex}66`;
+
+    const grid = document.getElementById("options_grid");
+    grid.innerHTML = "";
+
+    COLOR_PALETTE.forEach((col, idx) => {
+        let btn = document.createElement("button");
+        btn.className = "color-btn";
+        btn.style.background = col.hex;
+        btn.innerText = col.name;
+        btn.onclick = () => handleChoice(idx);
+        grid.appendChild(btn);
+    });
+}
+
+function handleChoice(index) {
+    if (!isPlaying) return;
+
+    if (index === currentCorrectIndex) {
+        score += 10 * combo;
+        combo++;
+        timeLeft = Math.min(100, timeLeft + 8);
+    } else {
+        combo = 1;
+        timeLeft = Math.max(0, timeLeft - 15);
+        const targetEl = document.getElementById("target_word");
+        targetEl.classList.add("shake");
+        setTimeout(() => targetEl.classList.remove("shake"), 300);
+    }
+
+    document.getElementById("score_val").innerText = score;
+    document.getElementById("combo_val").innerText = "x" + combo;
+
+    if (timeLeft > 0) {
+        nextQuestion();
+    } else {
+        endGame();
+    }
+}
+
+function endGame() {
+    isPlaying = false;
+    clearInterval(timerInterval);
+    
+    let isNewRecord = false;
+    if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("color_game_high", highScore);
+        document.getElementById("high_score_val").innerText = highScore;
+        isNewRecord = true;
+    }
+
+    document.getElementById("final_score").innerText = "Счет: " + score;
+    document.getElementById("record_msg").innerText = isNewRecord ? "🎉 Новый рекорд!" : "Рекорд: " + highScore;
+    document.getElementById("game_over_box").style.display = "flex";
+}
+
+startGame();
+</script>
+
+</body>
+</html>

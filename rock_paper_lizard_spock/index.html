@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>КНБ (Ящерица / Спок)</title>
+    <style>
+        * { box-sizing: border-box; touch-action: manipulation; }
+        body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 15px 10px; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .container { width: 100%; max-width: 440px; background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .back-link { display: block; text-align: left; color: #58a6ff; text-decoration: none; margin-bottom: 15px; font-size: 14px; font-weight: bold; }
+        .title { font-size: 20px; font-weight: 800; color: #f0f6fc; margin-bottom: 15px; }
+
+        .score-board { display: flex; justify-content: space-around; background: #010409; padding: 10px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 20px; font-size: 14px; font-weight: bold; }
+        .score-num { font-size: 18px; color: #58a6ff; }
+
+        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .choice-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 12px 6px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.15s; }
+        .choice-btn:active { transform: scale(0.95); background: #30363d; }
+
+        .result-box { background: #010409; border: 1px solid #30363d; border-radius: 12px; padding: 15px; min-height: 80px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .res-text { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+        .res-desc { font-size: 12px; color: #8b949e; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="/" class="back-link">← На главную</a>
+    <div class="title">🦎 КНБ (Ящерица / Спок)</div>
+
+    <div class="score-board">
+        <div>Игрок: <span class="score-num" id="p_score">0</span></div>
+        <div>Бот: <span class="score-num" id="b_score">0</span></div>
+    </div>
+
+    <div class="btn-grid">
+        <button class="choice-btn" onclick="play('rock')">✊ Камень</button>
+        <button class="choice-btn" onclick="play('scissors')">✌️ Ножницы</button>
+        <button class="choice-btn" onclick="play('paper')">✋ Бумага</button>
+        <button class="choice-btn" onclick="play('lizard')">🦎 Ящерица</button>
+        <button class="choice-btn" onclick="play('spock')">🖖 Спок</button>
+    </div>
+
+    <div class="result-box">
+        <div class="res-text" id="res_text">Сделай ход!</div>
+        <div class="res-desc" id="res_desc">Камень ломает ножницы, Ящерица отравляет Спока...</div>
+    </div>
+</div>
+
+<script>
+const rules = {
+    rock: { beats: { scissors: 'ломает', lizard: 'давит' }, name: '✊ Камень' },
+    scissors: { beats: { paper: 'режут', lizard: 'обезглавливают' }, name: '✌️ Ножницы' },
+    paper: { beats: { rock: 'накрывает', spock: 'подставляет' }, name: '✋ Бумага' },
+    lizard: { beats: { spock: 'отравляет', paper: 'ест' }, name: '🦎 Ящерица' },
+    spock: { beats: { scissors: 'ломает', rock: 'испепеляет' }, name: '🖖 Спок' }
+};
+
+let pScore = 0, bScore = 0;
+
+function play(playerChoice) {
+    const keys = Object.keys(rules);
+    const botChoice = keys[Math.floor(Math.random() * keys.length)];
+
+    const resText = document.getElementById('res_text');
+    const resDesc = document.getElementById('res_desc');
+
+    if (playerChoice === botChoice) {
+        resText.innerText = "🤝 Ничья!";
+        resText.style.color = "#e6edf3";
+        resDesc.innerText = `Оба выбрали ${rules[playerChoice].name}`;
+    } else if (rules[playerChoice].beats[botChoice]) {
+        pScore++;
+        const verb = rules[playerChoice].beats[botChoice];
+        resText.innerText = "🎉 Победа!";
+        resText.style.color = "#3fb950";
+        resDesc.innerText = `${rules[playerChoice].name} ${verb} ${rules[botChoice].name}`;
+    } else {
+        bScore++;
+        const verb = rules[botChoice].beats[playerChoice];
+        resText.innerText = "💥 Поражение!";
+        resText.style.color = "#f85149";
+        resDesc.innerText = `${rules[botChoice].name} ${verb} ${rules[playerChoice].name}`;
+    }
+
+    document.getElementById('p_score').innerText = pScore;
+    document.getElementById('b_score').innerText = bScore;
+}
+</script>
+
+</body>
+</html>

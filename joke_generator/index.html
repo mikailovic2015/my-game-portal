@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Генератор шуток</title>
+    <style>
+        * { box-sizing: border-box; touch-action: manipulation; }
+        body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 15px 10px; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .container { width: 100%; max-width: 440px; background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+        .back-link { display: block; text-align: left; color: #58a6ff; text-decoration: none; margin-bottom: 15px; font-size: 14px; font-weight: bold; }
+        
+        .title { font-size: 22px; font-weight: 800; color: #f0f6fc; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; background: #010409; border: 1px solid #30363d; color: #3fb950; font-size: 11px; padding: 4px 10px; border-radius: 12px; margin-bottom: 15px; font-weight: bold; }
+        .status-dot { width: 6px; height: 6px; background-color: #3fb950; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #3fb950; }
+
+        .categories { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 15px; scrollbar-width: none; }
+        .categories::-webkit-scrollbar { display: none; }
+        .cat-btn { background: #010409; border: 1px solid #30363d; color: #8b949e; padding: 8px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        .cat-btn.active { background: #1f6feb; border-color: #388bfd; color: #ffffff; }
+        
+        .joke-card { background: #010409; border: 1px solid #30363d; border-radius: 14px; padding: 25px 18px; margin-bottom: 15px; min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s ease; position: relative; }
+        .joke-text { font-size: 16px; line-height: 1.5; color: #e6edf3; font-weight: 500; opacity: 1; transition: opacity 0.15s ease; }
+        .joke-card.fade .joke-text { opacity: 0; }
+        
+        .action-bar { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn-action { flex: 1; background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s; }
+        .btn-action:active { transform: scale(0.96); background: #30363d; }
+        
+        .btn-main { width: 100%; background: linear-gradient(135deg, #1f6feb, #238636); border: none; color: white; padding: 16px; font-size: 16px; font-weight: 800; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: all 0.2s; }
+        .btn-main:active { transform: scale(0.98); }
+        
+        .toast { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); background: #388bfd; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="/" class="back-link">← На главную</a>
+    <div class="title">🃏 Генератор шуток</div>
+
+    <div class="status-badge">
+        <span class="status-dot"></span>
+        <span id="joke_count_status">База: 0 шуток</span>
+    </div>
+
+    <div class="categories">
+        <button class="cat-btn active" onclick="setCategory('all', this)">🎲 Все</button>
+        <button class="cat-btn" onclick="setCategory('it', this)">💻 IT & Код</button>
+        <button class="cat-btn" onclick="setCategory('life', this)">🧠 Жизненно</button>
+        <button class="cat-btn" onclick="setCategory('short', this)">⚡ Короткие</button>
+    </div>
+
+    <div class="joke-card" id="joke_card">
+        <div class="joke-text" id="joke_text">Загрузка шуток из базы...</div>
+    </div>
+
+    <div class="action-bar">
+        <button class="btn-action" onclick="copyJoke()">📋 Копировать</button>
+        <button class="btn-action" onclick="likeJoke()">❤️ <span id="like_count">0</span></button>
+    </div>
+
+    <button class="btn-main" onclick="nextJoke()">🎲 Следующая шутка</button>
+
+    <div class="toast" id="toast">Скопировано в буфер!</div>
+</div>
+
+<script>
+let localJokes = [
+    { cat: "it", text: "Программист перед сном ставит два стакана: один с водой (если захочет пить), а второй пустой (если не захочет)." },
+    { cat: "it", text: "Существует 10 типов людей: те, кто понимают двоичную систему, и те, кто нет." },
+    { cat: "life", text: "Я не откладываю дела на потом, я даю им время настояться." },
+    { cat: "short", text: "Купил книгу по тайм-менеджменту. Дочитаю потом." }
+];
+
+let currentCategory = "all";
+let currentJokeText = "";
+let likes = 0;
+
+async function fetchServerJokes() {
+    try {
+        const res = await fetch('/api/jokes');
+        if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+                localJokes = data;
+            }
+        }
+    } catch(e) {
+        console.log("Используем локальный резерв шуток");
+    }
+    document.getElementById("joke_count_status").innerText = `База: ${localJokes.length} шуток`;
+}
+
+function setCategory(cat, btn) {
+    currentCategory = cat;
+    document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    nextJoke();
+}
+
+function nextJoke() {
+    const card = document.getElementById("joke_card");
+    card.classList.add("fade");
+
+    setTimeout(() => {
+        let filtered = currentCategory === "all" ? localJokes : localJokes.filter(j => j.cat === currentCategory);
+        if (filtered.length === 0) filtered = localJokes;
+        
+        let item = filtered[Math.floor(Math.random() * filtered.length)];
+        currentJokeText = typeof item === "string" ? item : item.text;
+        
+        document.getElementById("joke_text").innerText = currentJokeText;
+        likes = Math.floor(Math.random() * 40) + 5;
+        document.getElementById("like_count").innerText = likes;
+
+        card.classList.remove("fade");
+    }, 150);
+}
+
+function copyJoke() {
+    if (!currentJokeText) return;
+    navigator.clipboard.writeText(currentJokeText);
+    const toast = document.getElementById("toast");
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 1500);
+}
+
+function likeJoke() {
+    likes++;
+    document.getElementById("like_count").innerText = likes;
+}
+
+fetchServerJokes().then(() => nextJoke());
+</script>
+
+</body>
+</html>

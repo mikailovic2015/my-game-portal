@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Магическая Алхимия</title>
+    <style>
+        body { background: #2e1065; color: #f472b6; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
+        h2 { margin: 5px 0; color: #f472b6; }
+        .stats { font-size: 20px; color: #facc15; font-weight: bold; margin-bottom: 12px; }
+        .potion-btn { width: 160px; height: 160px; background: #3b0764; border: 4px solid #c084fc; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; user-select: none; box-shadow: 0 0 25px rgba(192,132,252,0.4); transition: 0.05s; }
+        .potion-btn:active { transform: scale(0.92); border-color: #facc15; }
+        .shop { background: #3b0764; border: 1px solid #581c87; border-radius: 12px; padding: 12px; width: 100%; max-width: 340px; margin-top: 15px; }
+        .shop h3 { color: #facc15; margin: 0 0 8px 0; font-size: 13px; text-align: center; }
+        .btn { background: #581c87; color: #fff; border: none; padding: 7px; border-radius: 6px; width: 100%; margin-top: 5px; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; }
+        .btn:hover { background: #6b21a8; }
+        a { color: #38bdf8; text-decoration: none; font-size: 13px; margin-top: 15px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <h2>🧪 МАГИЧЕСКАЯ АЛХИМИЯ</h2>
+    <div class="stats" id="mana">0 маны</div>
+    
+    <div class="potion-btn" onclick="brew()">
+        <div style="font-size: 50px;">🔮</div>
+        <div style="font-size: 11px; color: #facc15; margin-top: 4px;">ВАРИТЬ ЗЕЛЬЕ</div>
+    </div>
+
+    <div class="shop">
+        <h3>🛒 БАШНЯ МАГА И УЛУЧШЕНИЯ</h3>
+        <button class="btn" onclick="buy('rune')"><span>✨ Сила рун (+1/клик)</span><span id="c1" style="color:#facc15;">30 маны</span></button>
+        <button class="btn" onclick="buy('apprentice')"><span>🧙 Ученик мага (+2/сек)</span><span id="c2" style="color:#facc15;">110 маны</span></button>
+        <button class="btn" onclick="buy('grimoire')"><span>📖 Гримуар (+10/сек)</span><span id="c3" style="color:#facc15;">550 маны</span></button>
+    </div>
+
+    <a href="../../">← На главную портала</a>
+
+    <script>
+        let mana = 0, power = 1, autoMana = 0;
+        let costs = { rune: 30, apprentice: 110, grimoire: 550 };
+
+        function brew() { mana += power; update(); }
+
+        function buy(item) {
+            if (mana >= costs[item]) {
+                mana -= costs[item];
+                if (item === 'rune') { power++; costs[item] = Math.floor(costs[item] * 1.5); }
+                else if (item === 'apprentice') { autoMana += 2; costs[item] = Math.floor(costs[item] * 1.6); }
+                else if (item === 'grimoire') { autoMana += 10; costs[item] = Math.floor(costs[item] * 1.7); }
+                update();
+            }
+        }
+
+        setInterval(() => { if (autoMana > 0) { mana += autoMana; update(); } }, 1000);
+
+        function update() {
+            document.getElementById('mana').innerText = mana + ' маны';
+            document.getElementById('c1').innerText = costs.rune + ' маны';
+            document.getElementById('c2').innerText = costs.apprentice + ' маны';
+            document.getElementById('c3').innerText = costs.grimoire + ' маны';
+        }
+    </script>
+</body>
+</html>

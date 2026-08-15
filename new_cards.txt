@@ -1,0 +1,5 @@
+        <a href="games/cyber-hack/" class="card">💻 Кибер-Хакер</a>
+        <a href="games/zombie-surv/" class="card">🧟 Зомби-Выживание</a>
+        <a href="games/space-mine/" class="card">🚀 Космический Бур</a>
+        <a href="games/speed-drift/" class="card">🏎️ Спид-Дрифт</a>
+        <a href="games/magic-alchemy/" class="card">🧪 Магическая Алхимия</a>

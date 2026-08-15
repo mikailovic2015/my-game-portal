@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход - Игровой Портал</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 12px; }
+        h2 { color: #f0f6fc; text-align: center; font-size: 20px; }
+        input { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px; color: white; font-size: 14px; outline: none; }
+        button { background: #238636; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .link { text-align: center; font-size: 13px; color: #58a6ff; text-decoration: none; margin-top: 5px; display: inline-block; }
+        .captcha-box { background: #0d1117; border: 1px solid #30363d; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🔑 Вход</h2>
+        <input type="email" id="login-email" placeholder="Gmail">
+        <input type="password" id="login-pass" placeholder="Пароль">
+        
+        <div class="captcha-box">
+            <span id="captcha-question">Загрузка рекапчи...</span>
+            <input type="number" id="captcha-answer" placeholder="Ответ">
+        </div>
+
+        <button onclick="doLogin()">Войти</button>
+        <a href="/forgot-password.html" class="link">Забыли пароль?</a>
+        <a href="/register.html" class="link">Нет аккаунта? Зарегистрироваться</a>
+        <a href="/" class="link" style="color: #8b949e;">На главную</a>
+    </div>
+
+<script>
+let correctAnswer = 0;
+
+function generateCaptcha() {
+    const num1 = Math.floor(Math.random() * 10) + 1;
+    const num2 = Math.floor(Math.random() * 10) + 1;
+    correctAnswer = num1 + num2;
+    document.getElementById('captcha-question').innerText = `🛡️ Рекапча: сколько будет ${num1} + ${num2}?`;
+}
+generateCaptcha();
+
+const MAIN_LOCALHOST_URL = window.location.origin;
+
+function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-pass').value.trim();
+    const userAnswer = parseInt(document.getElementById('captcha-answer').value.trim());
+
+    if (!email || !password) {
+        alert('Введи Gmail и пароль!');
+        return;
+    }
+
+    if (userAnswer !== correctAnswer) {
+        alert('❌ Ошибка рекапчи! Неверный ответ на пример.');
+        generateCaptcha();
+        document.getElementById('captcha-answer').value = '';
+        return;
+    }
+
+    fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = MAIN_LOCALHOST_URL;
+        } else {
+            alert(data.error || 'Ошибка входа');
+            generateCaptcha();
+        }
+    });
+}
+</script>
+</body>
+</html>

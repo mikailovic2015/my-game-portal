@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Угадай Число</title>
+    <style>
+        * { box-sizing: border-box; touch-action: manipulation; }
+        body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 15px 10px; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .container { width: 100%; max-width: 420px; background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .back-link { display: block; text-align: left; color: #58a6ff; text-decoration: none; margin-bottom: 15px; font-size: 14px; font-weight: bold; }
+        .title { font-size: 22px; font-weight: 800; color: #f0f6fc; margin-bottom: 10px; }
+        .subtitle { font-size: 13px; color: #8b949e; margin-bottom: 20px; }
+
+        .num-input { width: 100%; background: #010409; border: 1px solid #30363d; border-radius: 12px; padding: 14px; font-size: 18px; color: white; text-align: center; margin-bottom: 15px; outline: none; }
+        .num-input:focus { border-color: #58a6ff; }
+
+        .btn-main { width: 100%; background: #2970ff; border: none; color: white; padding: 15px; font-size: 16px; font-weight: 800; border-radius: 12px; cursor: pointer; }
+        .btn-main:active { transform: scale(0.98); }
+
+        .status { margin-top: 15px; font-size: 14px; font-weight: bold; color: #e3b341; min-height: 24px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="/" class="back-link">← На главную</a>
+    <div class="title">🎯 Угадай Число</div>
+    <div class="subtitle">Я загадал число от 1 до 50</div>
+
+    <input type="number" class="num-input" id="guess_input" placeholder="Твоё число..." min="1" max="50">
+
+    <button class="btn-main" onclick="checkGuess()">Проверить</button>
+
+    <div class="status" id="status">Жду твою попытку!</div>
+</div>
+
+<script>
+let target = Math.floor(Math.random() * 50) + 1;
+let attempts = 0;
+
+function checkGuess() {
+    const input = document.getElementById('guess_input');
+    const status = document.getElementById('status');
+    const val = parseInt(input.value);
+
+    if (!val || val < 1 || val > 50) {
+        status.innerText = '⚠️ Введи число от 1 до 50!';
+        status.style.color = '#f85149';
+        return;
+    }
+
+    attempts++;
+
+    if (val === target) {
+        status.innerText = `🎉 Угадал за ${attempts} попыток! Загадано новое число.`;
+        status.style.color = '#3fb950';
+        target = Math.floor(Math.random() * 50) + 1;
+        attempts = 0;
+    } else if (val < target) {
+        status.innerText = '📈 Моё число БОЛЬШЕ!';
+        status.style.color = '#e3b341';
+    } else {
+        status.innerText = '📉 Моё число МЕНЬШЕ!';
+        status.style.color = '#e3b341';
+    }
+    input.value = '';
+}
+</script>
+
+</body>
+</html>

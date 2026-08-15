@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Магический Шар</title>
+    <style>
+        body { background: #0f172a; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; padding: 15px; }
+        .back { position: absolute; top: 20px; left: 20px; color: #94a3b8; text-decoration: none; font-weight: bold; background: #1e293b; padding: 10px 15px; border-radius: 8px; border: 1px solid #334155; }
+        .card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-width: 380px; width: 100%; }
+        h1 { color: #38bdf8; margin-top: 0; }
+        .ball { width: 150px; height: 150px; background: radial-gradient(circle at 30% 30%, #38bdf8, #0f172a); border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(56, 189, 248, 0.4); border: 2px solid #38bdf8; transition: transform 0.4s; }
+        .answer { font-size: 14px; color: #facc15; padding: 10px; font-weight: bold; }
+        input { width: 100%; padding: 12px; margin: 15px 0; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; font-size: 16px; box-sizing: border-box; text-align: center; }
+        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 12px 24px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; }
+        .btn:hover { background: #0ea5e9; }
+    </style>
+</head>
+<body>
+    <a href="../" class="back">← На главную</a>
+    <div class="card">
+        <h1>🔮 Магический Шар</h1>
+        <div class="ball" id="ball">
+            <div class="answer" id="ans">Спроси меня о чем-то</div>
+        </div>
+        <input type="text" id="question" placeholder="Введи свой вопрос...">
+        <button class="btn" onclick="askBall()">Получить ответ</button>
+    </div>
+    <script>
+        const answers = [
+            "Бесспорно", "Предрешено", "Никаких сомнений", "Определенно да",
+            "Можешь быть уверен в этом", "Мне кажется — да", "Вероятнее всего",
+            "Пока не ясно, попробуй снова", "Спроси позже", "Лучше не рассказывать",
+            "Даже не думай", "Мой ответ — нет", "По моим данным — нет", "Перспективы не очень хорошие"
+        ];
+        function askBall() {
+            let q = document.getElementById('question').value.trim();
+            if(!q) {
+                alert("Сначала задай вопрос!");
+                return;
+            }
+            let b = document.getElementById('ball');
+            b.style.transform = "scale(1.1) rotate(15deg)";
+            setTimeout(() => b.style.transform = "scale(1) rotate(0deg)", 400);
+            
+            let randAns = answers[Math.floor(Math.random() * answers.length)];
+            document.getElementById('ans').innerText = randAns;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Эволюционный Кликер + Магазин</title>
+    <style>
+        body { background: #0f172a; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 10px; }
+        h2 { color: #38bdf8; margin-bottom: 2px; font-size: 20px; }
+        .score { font-size: 24px; color: #34d399; font-weight: bold; margin-bottom: 5px; }
+        .stage-title { font-size: 15px; color: #fbbf24; margin-bottom: 15px; font-weight: bold; min-height: 20px; text-align: center; }
+        .click-animal { width: 140px; height: 140px; background: #1e293b; border: 4px solid #38bdf8; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; user-select: none; box-shadow: 0 0 25px rgba(56,189,248,0.3); transition: 0.08s ease; margin-bottom: 15px; }
+        .click-animal:active { transform: scale(0.90); }
+        .animal-emoji { font-size: 56px; margin-bottom: 2px; }
+        .animal-name { font-size: 12px; color: #94a3b8; font-weight: bold; }
+        .progress-container { width: 100%; max-width: 300px; background: #1e293b; border-radius: 8px; margin-bottom: 15px; height: 10px; border: 1px solid #334155; overflow: hidden; }
+        .progress-bar { height: 100%; background: #34d399; width: 0%; transition: width 0.2s; }
+        .next-info { font-size: 12px; color: #64748b; margin-bottom: 15px; text-align: center; }
+        .shop { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 12px; width: 100%; max-width: 320px; }
+        .shop h3 { margin: 0 0 8px 0; font-size: 14px; color: #38bdf8; text-align: center; }
+        .shop-btn { background: #334155; color: #fff; border: 1px solid #475569; padding: 8px; border-radius: 6px; font-weight: bold; width: 100%; margin-top: 6px; cursor: pointer; text-align: left; font-size: 12px; display: flex; justify-content: space-between; }
+        .shop-btn:hover { background: #475569; border-color: #38bdf8; }
+        a { color: #38bdf8; text-decoration: none; font-size: 13px; margin-top: 15px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <h2>🐾 Эволюция + Магазин</h2>
+    <div class="score" id="score">0 очков</div>
+    <div class="stage-title" id="stageTitle">Стадия: Бактерия</div>
+    <div class="click-animal" id="clickBtn" onclick="handleClick()">
+        <div class="animal-emoji" id="animEmoji">🦠</div>
+        <div class="animal-name" id="animName">Микроб</div>
+    </div>
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="next-info" id="nextInfo">До след. эволюции: 4000 очков</div>
+    <div class="shop">
+        <h3>🛒 Магазин улучшений</h3>
+        <button class="shop-btn" onclick="buyUpgrade('power')">
+            <span>💪 Сила клика (+1)</span>
+            <span id="powerCost" style="color: #34d399;">50 очков</span>
+        </button>
+        <button class="shop-btn" onclick="buyUpgrade('auto')">
+            <span>⚡ Авто-эволюция (+1/сек)</span>
+            <span id="autoCost" style="color: #34d399;">200 очков</span>
+        </button>
+    </div>
+    <a href="../">← На главную</a>
+    <script>
+        var score = 0, clickPower = 1, autoClicker = 0, powerCost = 50, autoCost = 200;
+        var evolutionTree = [
+            { threshold: 0, emoji: "🦠", name: "Бактерия", title: "Эра 1: Микромир" },
+            { threshold: 4000, emoji: "🪱", name: "Червь", title: "Эра 2: Многоклеточные" },
+            { threshold: 8000, emoji: "🐌", name: "Улитка", title: "Эра 3: Медленный ползун" },
+            { threshold: 12000, emoji: "🐛", name: "Гусеница", title: "Эра 4: Личинка" },
+            { threshold: 16000, emoji: "🐜", name: "Муравей", title: "Эра 5: Трудяга" },
+            { threshold: 20000, emoji: "🐝", name: "Пчела", title: "Эра 6: Крылатый сборщик" },
+            { threshold: 24000, emoji: "🐞", name: "Божья коровка", title: "Эра 7: Пятнистый жучок" },
+            { threshold: 28000, emoji: "🕷️", name: "Паук", title: "Эра 8: Сетевой охотник" },
+            { threshold: 32000, emoji: "🦀", name: "Краб", title: "Эра 9: Панцирный житель" },
+            { threshold: 36000, emoji: "🐠", name: "Рыбка", title: "Эра 10: Речной обитатель" },
+            { threshold: 40000, emoji: "🐟", name: "Окунь", title: "Эра 11: Быстрая рыба" },
+            { threshold: 44000, emoji: "🐬", name: "Дельфин", title: "Эра 12: Умный млекопитающий" },
+            { threshold: 48000, emoji: "🐸", name: "Лягушка", title: "Эра 13: Земноводное" },
+            { threshold: 52000, emoji: "🐢", name: "Черепаха", title: "Эра 14: Древний панцирь" },
+            { threshold: 56000, emoji: "🦎", name: "Ящерица", title: "Эра 15: Пресмыкающееся" },
+            { threshold: 60000, emoji: "🐍", name: "Змея", title: "Эра 16: Гибкий хищник" },
+            { threshold: 64000, emoji: "🦖", name: "Динозавр", title: "Эра 17: Юрский период" },
+            { threshold: 68000, emoji: "🦕", name: "Завропод", title: "Эра 18: Огромный ящер" },
+            { threshold: 72000, emoji: "🐓", name: "Петух", title: "Эра 19: Пернатый босс" },
+            { threshold: 76000, emoji: "🦃", name: "Индюк", title: "Эра 20: Птичий двор" },
+            { threshold: 80000, emoji: "🐇", name: "Кролик", title: "Эра 21: Быстрый прыгун" },
+            { threshold: 84000, emoji: "🐈", name: "Кошка", title: "Эра 22: Домашний хищник" },
+            { threshold: 88000, emoji: "🐕", name: "Собака", title: "Эра 23: Верный страж" },
+            { threshold: 92000, emoji: "🦊", name: "Лиса", title: "Эра 24: Хитрая плутовка" },
+            { threshold: 96000, emoji: "🐺", name: "Волк", title: "Эра 25: Лесной вожак" },
+            { threshold: 100000, emoji: "🐅", name: "Тигр", title: "Эра 26: Полосатый зверь" },
+            { threshold: 104000, emoji: "🦁", name: "Лев", title: "Эра 27: Царь зверей" },
+            { threshold: 108000, emoji: "🦍", name: "Горилла", title: "Эра 28: Мощный примат" },
+            { threshold: 112000, emoji: "🦣", name: "Мамонт", title: "Эра 29: Ледниковый гигант" },
+            { threshold: 116000, emoji: "🦏", name: "Носорог", title: "Эра 30: Несокрушимая броня" },
+            { threshold: 120000, emoji: "🐘", name: "Слон", title: "Эра 31: Сухопутный колосс" },
+            { threshold: 124000, emoji: "🐋", name: "Кит", title: "Эра 32: Владыка океана" },
+            { threshold: 128000, emoji: "🐉", name: "Дракон", title: "Эра 33: Мифическая стихия" },
+            { threshold: 132000, emoji: "👑", name: "Левиафан", title: "Эра 34: Абсолютная вершина эволюции!" }
+        ];
+        function handleClick() { score += clickPower; updateGame(); }
+        function buyUpgrade(type) {
+            if (type === 'power' && score >= powerCost) {
+                score -= powerCost; clickPower += 1; powerCost = Math.floor(powerCost * 1.5);
+                document.getElementById('powerCost').innerText = powerCost + ' очков';
+            } else if (type === 'auto' && score >= autoCost) {
+                score -= autoCost; autoClicker += 1; autoCost = Math.floor(autoCost * 1.6);
+                document.getElementById('autoCost').innerText = autoCost + ' очков';
+            }
+            updateGame();
+        }
+        setInterval(function() { if (autoClicker > 0) { score += autoClicker; updateGame(); } }, 1000);
+        function updateGame() {
+            document.getElementById('score').innerText = score + ' очков';
+            var currentStage = evolutionTree[0], nextStage = null;
+            for (var i = 0; i < evolutionTree.length; i++) {
+                if (score >= evolutionTree[i].threshold) {
+                    currentStage = evolutionTree[i];
+                    nextStage = evolutionTree[i + 1] ? evolutionTree[i + 1] : null;
+                }
+            }
+            document.getElementById('animEmoji').innerText = currentStage.emoji;
+            document.getElementById('animName').innerText = currentStage.name;
+            document.getElementById('stageTitle').innerText = currentStage.title;
+            if (nextStage) {
+                var percent = ((score - currentStage.threshold) / (nextStage.threshold - currentStage.threshold)) * 100;
+                document.getElementById('progressBar').style.width = percent + '%';
+                document.getElementById('nextInfo').innerText = 'До след. животного (' + nextStage.name + '): ' + (nextStage.threshold - score) + ' очков';
+            } else {
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('nextInfo').innerText = '👑 Достигнут абсолютный пик эволюции!';
+            }
+        }
+        updateGame();
+    </script>
+</body>
+</html>

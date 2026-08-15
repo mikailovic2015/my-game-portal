@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Кибер-Хакер</title>
+    <style>
+        body { background: #0d1117; color: #3fb950; font-family: monospace; text-align: center; padding: 15px; margin: 0; }
+        .back { display: inline-block; color: #58a6ff; text-decoration: none; margin-bottom: 10px; float: left; }
+        .clear { clear: both; }
+        .container { max-width: 450px; margin: 0 auto; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
+        h2 { color: #58a6ff; margin: 5px 0 15px 0; font-size: 20px; }
+        .stats { background: #0d1117; border: 1px solid #30363d; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; text-align: left; line-height: 1.5; }
+        .screen { background: #010409; border: 1px solid #30363d; padding: 10px; height: 110px; overflow-y: auto; color: #3fb950; font-size: 12px; text-align: left; margin-bottom: 15px; border-radius: 4px; word-break: break-all; }
+        .target-box { background: #21262d; border: 1px solid #30363d; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; }
+        .progress-bar { width: 100%; background: #30363d; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 8px; }
+        .progress-fill { background: #238636; height: 100%; width: 0%; transition: width 0.1s; }
+        .btn { background: #238636; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 15px; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(35,134,54,0.3); }
+        .btn:hover { background: #2ea043; }
+        .shop { border-top: 1px solid #30363d; padding-top: 10px; margin-top: 10px; text-align: left; }
+        .shop-btn { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 8px 10px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 5px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .shop-btn:hover { background: #30363d; color: #fff; }
+        .backup-section { border-top: 1px solid #30363d; padding-top: 10px; margin-top: 10px; display: flex; gap: 8px; }
+        .backup-btn { background: #30363d; color: #c9d1d9; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 11px; flex: 1; }
+        .backup-btn:hover { background: #484f58; color: #fff; }
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body>
+    <a href="/" class="back">← На главную</a>
+    <div class="clear"></div>
+    <div class="container">
+        <h2>💻 Кибер-Хакер</h2>
+        
+        <div class="stats">
+            ⚡ Символов напечатано: <span id="chars">0</span><br>
+            💰 Биткоинов: <span id="coins">0</span><br>
+            🤖 Авто-скриптов/сек: <span id="cps">0</span>
+        </div>
+
+        <div class="target-box">
+            <div id="targetName">Цель: Обучение на старом ноутбуке</div>
+            <div class="progress-bar"><div class="progress-fill" id="pbar"></div></div>
+            <div style="font-size: 11px; color: #8b949e; margin-top: 4px;"><span id="progressText">0 / 50</span> символов</div>
+        </div>
+
+        <div class="screen" id="log">> Инициализация терминала... Нажимай кнопку, чтобы вводить код.</div>
+
+        <button class="btn" onclick="typeCode()">⌨️ Ввести код / Нажать клавишу</button>
+
+        <div class="shop">
+            <div style="font-size: 12px; font-weight: bold; color: #58a6ff; margin-bottom: 5px;">🛒 Черный рынок софта:</div>
+            <button class="shop-btn" onclick="buyAutoScript()"><span>🤖 Авто-скрипт (+1 сим/сек)</span><span id="costScript">🪙 50</span></button>
+            <button class="shop-btn" onclick="buyBooster()"><span>⚡ Усилитель пальцев (+1 к клику)</span><span id="costBooster">🪙 100</span></button>
+        </div>
+
+        <div class="backup-section">
+            <button class="backup-btn" onclick="exportBackup()">💾 Скачать бэкап</button>
+            <button class="backup-btn" onclick="document.getElementById('importFile').click()">📂 Загрузить бэкап</button>
+            <input type="file" id="importFile" accept=".json" onchange="importBackup(event)">
+        </div>
+    </div>
+
+    <script>
+        let game = {
+            chars: 0,
+            coins: 0,
+            cps: 0,
+            clickPower: 1,
+            targetIndex: 0,
+            currentProgress: 0,
+            scriptCost: 50,
+            boosterCost: 100
+        };
+
+        const targets = [
+            { name: "Цель: Обучение на старом ноутбуке", max: 50, reward: 20, text: "ноутбук" },
+            { name: "Цель: Школьный Wi-Fi сервер", max: 150, reward: 70, text: "школьный роутер" },
+            { name: "Цель: Банкомат городского банка", max: 400, reward: 200, text: "банкомат" },
+            { name: "Цель: База данных Amazon", max: 1000, reward: 500, text: "сервер Amazon" },
+            { name: "Цель: Корпорация Google", max: 2500, reward: 1200, text: "дата-центр Google" },
+            { name: "Цель: Главный сервер Пентагона", max: 6000, reward: 3000, text: "Пентагон" },
+            { name: "Цель: Система управления спутниками", max: 15000, reward: 8000, text: "военный спутник" },
+            { name: "Цель: Искусственный Интеллект Скайнет", max: 40000, reward: 25000, text: "ИИ Скайнет" }
+        ];
+
+        const randomChars = "01010101ABCDEF#\$%&*<>\\/root/admin/exec()";
+
+        function loadGame() {
+            let saved = localStorage.getItem('cyber_hacker_save');
+            if (saved) {
+                try { game = JSON.parse(saved); } catch(e) {}
+            }
+            updateUI();
+        }
+
+        function saveGame() {
+            localStorage.setItem('cyber_hacker_save', JSON.stringify(game));
+        }
+
+        function typeCode() {
+            game.chars += game.clickPower;
+            game.currentProgress += game.clickPower;
+            game.coins += game.clickPower * 2;
+            
+            // Генерируем случайный код на экране
+            let codeSnippet = "";
+            for(let i=0; i<game.clickPower; i++) {
+                codeSnippet += randomChars[Math.floor(Math.random() * randomChars.length)];
+            }
+            const log = document.getElementById('log');
+            log.innerHTML += codeSnippet;
+            log.scrollTop = log.scrollHeight;
+
+            checkTarget();
+            updateUI();
+            saveGame();
+        }
+
+        function checkTarget() {
+            let t = targets[game.targetIndex];
+            if (game.currentProgress >= t.max) {
+                game.coins += t.reward;
+                const log = document.getElementById('log');
+                log.innerHTML += `<br><span style="color:#58a6ff;">[!] УСПЕХ! Взломан объект: ${t.text}! Награда: +${t.reward} монет.</span><br>`;
+                
+                game.targetIndex = (game.targetIndex + 1) % targets.length;
+                game.currentProgress = 0;
+            }
+        }
+
+        function buyAutoScript() {
+            if (game.coins >= game.scriptCost) {
+                game.coins -= game.scriptCost;
+                game.cps += 1;
+                game.scriptCost = Math.floor(game.scriptCost * 1.4);
+                updateUI();
+                saveGame();
+            } else {
+                alert("Недостаточно монет!");
+            }
+        }
+
+        function buyBooster() {
+            if (game.coins >= game.boosterCost) {
+                game.coins -= game.boosterCost;
+                game.clickPower += 1;
+                game.boosterCost = Math.floor(game.boosterCost * 1.5);
+                updateUI();
+                saveGame();
+            } else {
+                alert("Недостаточно монет!");
+            }
+        }
+
+        // Авто-кликер (скрипты)
+        setInterval(() => {
+            if (game.cps > 0) {
+                game.chars += game.cps;
+                game.currentProgress += game.cps;
+                game.coins += game.cps;
+                checkTarget();
+                updateUI();
+                saveGame();
+            }
+        }, 1000);
+
+        function updateUI() {
+            document.getElementById('chars').textContent = game.chars;
+            document.getElementById('coins').textContent = game.coins;
+            document.getElementById('cps').textContent = game.cps;
+
+            let t = targets[game.targetIndex];
+            document.getElementById('targetName').textContent = t.name;
+            document.getElementById('progressText').textContent = `${game.currentProgress} / ${t.max}`;
+            let percent = Math.min(100, (game.currentProgress / t.max) * 100);
+            document.getElementById('pbar').style.width = percent + '%';
+
+            document.getElementById('costScript').textContent = `🪙 ${game.scriptCost}`;
+            document.getElementById('costBooster').textContent = `🪙 ${game.boosterCost}`;
+        }
+
+        // Си темная бэкапов
+        function exportBackup() {
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(game));
+            let downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "cyber_hacker_backup.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importBackup(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let imported = JSON.parse(e.target.result);
+                    if (imported && typeof imported.chars === 'number') {
+                        game = imported;
+                        saveGame();
+                        updateUI();
+                        alert("Бэкап успешно восстановлен!");
+                    } else {
+                        alert("Неверный формат файла сохранения.");
+                    }
+                } catch(err) {
+                    alert("Ошибка чтения файла бэкапа.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        loadGame();
+    </script>
+</body>
+</html>

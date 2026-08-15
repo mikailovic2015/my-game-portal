@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Зомби-Выживание</title>
+    <style>
+        body { background: #18181b; color: #f43f5e; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
+        h2 { margin: 5px 0; color: #fb7185; }
+        .stats { font-size: 18px; color: #38bdf8; font-weight: bold; margin-bottom: 10px; }
+        .arena { width: 100%; max-width: 320px; height: 160px; background: #27272a; border: 2px solid #52525b; border-radius: 10px; display: flex; align-items: center; justify-content: space-around; cursor: pointer; user-select: none; font-size: 40px; }
+        .arena:active { background: #3f3f46; }
+        .shop { background: #27272a; border: 1px solid #3f3f46; border-radius: 12px; padding: 12px; width: 100%; max-width: 340px; margin-top: 15px; }
+        .shop h3 { color: #facc15; margin: 0 0 8px 0; font-size: 13px; text-align: center; }
+        .btn { background: #3f3f46; color: #fff; border: none; padding: 7px; border-radius: 6px; width: 100%; margin-top: 5px; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; }
+        .btn:hover { background: #52525b; }
+        a { color: #38bdf8; text-decoration: none; font-size: 13px; margin-top: 15px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <h2>🧟 ЗАЩИТА БАЗЫ</h2>
+    <div class="stats" id="score">Монет: 0 | Зомби убито: <span id="kills">0</span></div>
+    
+    <div class="arena" onclick="shoot()">
+        <span>🛡️</span>
+        <span id="zombieEmoji">🧟</span>
+        <span>🔫</span>
+    </div>
+    <div style="font-size: 12px; color: #a1a1aa; margin-top: 5px;">Жми на арену, чтобы отстреливаться!</div>
+
+    <div class="shop">
+        <h3>🛒 АРСЕНАЛ И УЛУЧШЕНИЯ</h3>
+        <button class="btn" onclick="buy('damage')"><span>💥 Урон оружия (+1)</span><span id="c1" style="color:#f43f5e;">25 монет</span></button>
+        <button class="btn" onclick="buy('turret')"><span>🤖 Авто-Турель (+1/сек)</span><span id="c2" style="color:#f43f5e;">100 монет</span></button>
+        <button class="btn" onclick="buy('wall')"><span>🧱 Броня базы (+5 ХП/сек)</span><span id="c3" style="color:#f43f5e;">250 монет</span></button>
+    </div>
+
+    <a href="../../">← На главную портала</a>
+
+    <script>
+        let money = 0, kills = 0, clickDmg = 1, autoDps = 0;
+        let costs = { damage: 25, turret: 100, wall: 250 };
+
+        function shoot() {
+            money += clickDmg;
+            kills += 1;
+            update();
+        }
+
+        function buy(item) {
+            if (money >= costs[item]) {
+                money -= costs[item];
+                if (item === 'damage') { clickDmg++; costs[item] = Math.floor(costs[item] * 1.6); }
+                else if (item === 'turret') { autoDps++; costs[item] = Math.floor(costs[item] * 1.7); }
+                else if (item === 'wall') { autoDps += 3; costs[item] = Math.floor(costs[item] * 1.8); }
+                update();
+            }
+        }
+
+        setInterval(() => { if (autoDps > 0) { money += autoDps; kills += Math.floor(autoDps/2); update(); } }, 1000);
+
+        function update() {
+            document.getElementById('score').innerText = 'Монет: ' + money + ' | Зомби: ' + kills;
+            document.getElementById('c1').innerText = costs.damage + ' монет';
+            document.getElementById('c2').innerText = costs.turret + ' монет';
+            document.getElementById('c3').innerText = costs.wall + ' монет';
+        }
+    </script>
+</body>
+</html>

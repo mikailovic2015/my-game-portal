@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Ритм-Игра</title>
+    <style>
+        body { background: #0d1117; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
+        .back { display: inline-block; color: #58a6ff; text-decoration: none; margin-bottom: 20px; float: left; }
+        .clear { clear: both; }
+        .game-container {
+            max-width: 300px; margin: 20px auto; background: #161b22; border: 1px solid #30363d;
+            border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .score-board { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #58a6ff; }
+        .track {
+            position: relative; height: 260px; background: #0d1117; border: 2px solid #30363d;
+            border-radius: 8px; overflow: hidden; margin-bottom: 15px;
+        }
+        .target-line {
+            position: absolute; bottom: 40px; width: 100%; height: 4px; background: rgba(88, 166, 255, 0.5);
+        }
+        .note {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 50px; height: 25px; background: #bc8cff; border-radius: 4px; cursor: pointer;
+        }
+        .tap-btn {
+            background: #238636; color: #fff; border: none; padding: 12px; width: 100%; font-size: 16px;
+            font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.2s;
+        }
+        .tap-btn:hover { background: #2ea043; }
+        .tap-btn:active { background: #196c2e; }
+    </style>
+</head>
+<body>
+    <a href="/" class="back">← На главную</a>
+    <div class="clear"></div>
+
+    <div class="game-container">
+        <h2>🎵 Ритм-Игра</h2>
+        <div class="score-board">Счет: <span id="score">0</span></div>
+        <div class="track" id="track">
+            <div class="target-line"></div>
+        </div>
+        <button class="tap-btn" onclick="hitNote()">ТАП!</button>
+    </div>
+
+    <script>
+        let score = 0;
+        let activeNote = null;
+
+        function spawnNote() {
+            if (activeNote) return; // Одна нота за раз для простоты
+            const track = document.getElementById('track');
+            const note = document.createElement('div');
+            note.className = 'note';
+            note.style.top = '0px';
+            track.appendChild(note);
+            activeNote = note;
+
+            let pos = 0;
+            const fall = setInterval(() => {
+                pos += 3;
+                note.style.top = pos + 'px';
+                // Если пролетел зону удара
+                if (pos > 220) {
+                    clearInterval(fall);
+                    if (activeNote === note) {
+                        note.remove();
+                        activeNote = null;
+                    }
+                }
+            }, 30);
+        }
+
+        function hitNote() {
+            if (!activeNote) return;
+            const pos = parseInt(activeNote.style.top);
+            // Зона идеального попадания (примерно линия на 180-210px)
+            if (pos >= 170 && pos <= 215) {
+                score += 10;
+                document.getElementById('score').textContent = score;
+                activeNote.style.background = '#3fb950';
+                setTimeout(() => {
+                    if (activeNote) activeNote.remove();
+                    activeNote = null;
+                }, 100);
+            }
+        }
+
+        // Запуск спавна нот каждые 1.5 секунды
+        setInterval(spawnNote, 1500);
+    </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Спид-Дрифт</title>
+    <style>
+        body { background: #0f172a; color: #38bdf8; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
+        h2 { margin: 5px 0; color: #fbbf24; }
+        .stats { font-size: 20px; color: #34d399; font-weight: bold; margin-bottom: 12px; }
+        .car-btn { width: 160px; height: 160px; background: #1e293b; border: 4px solid #fbbf24; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; user-select: none; box-shadow: 0 0 25px rgba(251,191,36,0.3); transition: 0.05s; }
+        .car-btn:active { transform: scale(0.92); border-color: #38bdf8; }
+        .shop { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px; width: 100%; max-width: 340px; margin-top: 15px; }
+        .shop h3 { color: #fbbf24; margin: 0 0 8px 0; font-size: 13px; text-align: center; }
+        .btn { background: #334155; color: #fff; border: none; padding: 7px; border-radius: 6px; width: 100%; margin-top: 5px; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; }
+        .btn:hover { background: #475569; }
+        a { color: #38bdf8; text-decoration: none; font-size: 13px; margin-top: 15px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <h2>🏎️ ТУРБО-ДРИФТ</h2>
+    <div class="stats" id="miles">0 миль</div>
+    
+    <div class="car-btn" onclick="drive()">
+        <div style="font-size: 50px;">🏎️</div>
+        <div style="font-size: 11px; color: #fbbf24; margin-top: 4px;">ГАЗ / ДРИФТ</div>
+    </div>
+
+    <div class="shop">
+        <h3>🛒 ТЮНИНГ МАГАЗИН</h3>
+        <button class="btn" onclick="buy('nitro')"><span>⚡ Нитро (+1 миля/клик)</span><span id="c1" style="color:#34d399;">35 миль</span></button>
+        <button class="btn" onclick="buy('engine')"><span>🔧 Двигатель V8 (+3/сек)</span><span id="c2" style="color:#34d399;">140 миль</span></button>
+        <button class="btn" onclick="buy('turbo')"><span>🌪️ Турбина (+12/сек)</span><span id="c3" style="color:#34d399;">700 миль</span></button>
+    </div>
+
+    <a href="../../">← На главную портала</a>
+
+    <script>
+        let miles = 0, power = 1, autoSpeed = 0;
+        let costs = { nitro: 35, engine: 140, turbo: 700 };
+
+        function drive() { miles += power; update(); }
+
+        function buy(item) {
+            if (miles >= costs[item]) {
+                miles -= costs[item];
+                if (item === 'nitro') { power++; costs[item] = Math.floor(costs[item] * 1.5); }
+                else if (item === 'engine') { autoSpeed += 3; costs[item] = Math.floor(costs[item] * 1.6); }
+                else if (item === 'turbo') { autoSpeed += 12; costs[item] = Math.floor(costs[item] * 1.7); }
+                update();
+            }
+        }
+
+        setInterval(() => { if (autoSpeed > 0) { miles += autoSpeed; update(); } }, 1000);
+
+        function update() {
+            document.getElementById('miles').innerText = miles + ' миль';
+            document.getElementById('c1').innerText = costs.nitro + ' миль';
+            document.getElementById('c2').innerText = costs.engine + ' миль';
+            document.getElementById('c3').innerText = costs.turbo + ' миль';
+        }
+    </script>
+</body>
+</html>

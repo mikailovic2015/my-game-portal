@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><title>Матрица</title>
+<style>body{margin:0;background:#000;overflow:hidden;} .back{position:absolute;top:10px;left:10px;color:#0f0;text-decoration:none;z-index:10;font-family:monospace;}</style>
+</head>
+<body>
+<a href="../" class="back">← На главную</a>
+<canvas id="c"></canvas>
+<script>
+const c = document.getElementById('c'); const ctx = c.getContext('2d');
+c.height = window.innerHeight; c.width = window.innerWidth;
+const letters = "0101010101010101ABCDEF"; const fontSize = 16;
+const columns = c.width / fontSize; const drops = Array(Math.floor(columns)).fill(1);
+function draw() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.fillStyle = '#0f0'; ctx.font = fontSize + 'px monospace';
+    drops.forEach((y, i) => {
+        let text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, y * fontSize);
+        if (y * fontSize > c.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+    });
+}
+setInterval(draw, 33);
+</script>
+</body>
+</html>

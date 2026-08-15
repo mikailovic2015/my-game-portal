@@ -1,0 +1,156 @@
+import os
+
+html_content = """<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра Виселица</title>
+    <style>
+        body { background: #0d1117; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 10px; margin: 0; }
+        .container { max-width: 450px; margin: 0 auto; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 15px; box-sizing: border-box; }
+        .back-link { display: block; text-align: left; color: #58a6ff; text-decoration: none; margin-bottom: 10px; font-size: 14px; font-weight: bold; }
+        h2 { margin: 10px 0; color: #f85149; }
+        .status { font-size: 14px; margin-bottom: 15px; color: #8b949e; background: #010409; padding: 8px; border-radius: 6px; border: 1px solid #30363d; }
+        .word-display { font-size: 28px; letter-spacing: 6px; margin: 20px 0; font-weight: bold; color: #58a6ff; font-family: monospace; word-break: break-all; min-height: 40px; }
+        .keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 15px; }
+        .key-btn { background: #21262d; color: #fff; border: 1px solid #484f58; height: 48px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; }
+        .key-btn:active { background: #58a6ff; color: #000; }
+        .key-btn:disabled { background: #1f242c; color: #484f58; border-color: #21262d; cursor: not-allowed; }
+        .restart-btn { width: 100%; background: #238636; color: #fff; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 15px; display: none; text-transform: uppercase; }
+        .restart-btn:hover { background: #2ea043; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="/" class="back-link">← На главную</a>
+    <h2>💀 Игра Виселица</h2>
+    
+    <div class="status">Ошибки: <span id="errors" style="color:#f85149; font-weight:bold;">0</span> / 6 | Настоящих слов в базе: <span id="total_words" style="color:#58a6ff;">0</span></div>
+    
+    <div class="word-display" id="word_container">-------</div>
+    
+    <div class="keyboard" id="keyboard"></div>
+    
+    <button class="restart-btn" id="restart_btn" onclick="initGame()">🔄 Следующее слово</button>
+</div>
+
+<script>
+// Настоящие осмысленные слова русского языка
+const realWords = [
+    "АВТОБУС", "АВТОМАТ", "АДВОКАТ", "АЛГОРИТМ", "АЛМАЗ", "АПЕЛЬСИН", "АППАРАТ", "АРБУЗ", "АСФАЛЬТ", "АЭРОДРОМ",
+    "БАГАЖНИК", "БАТАРЕЯ", "БЕГЕМОТ", "БЕНЗИН", "БЕРЕГ", "БЕСЕДКА", "БИБЛИОТЕКА", "БИСКВИТ", "БИОЛОГИЯ", "БОЛЬНИЦА",
+    "БРАСЛЕТ", "БУДИЛЬНИК", "БУТЕРА", "БУТЕРБРОД", "БЮДЖЕТ", "ВАГОН", "ВАКЦИНА", "ВАМПИР", "ВЕРТОЛЕТ", "ВЕЛОСИПЕД",
+    "ВЕНТИЛЯТОР", "ВЕСЕЛИЕ", "ВЕТЕРИНАР", "ВИДЕОКАРТА", "ВИКТОРИНА", "ВИНОГРАД", "ВИТАМИН", "ВИШНЯ", "ВОДОПРОВОД", "ВОЛШЕБНИК",
+    "ВУЛКАН", "ГАДЖЕТ", "ГАЛАКТИКА", "ГАЛЕРЕЯ", "ГАРМОНИЯ", "ГЕНЕРАТОР", "ГИГАНТ", "ГИРЛЯНДА", "ГИТАРА", "ГОРИЗОНТ",
+    "ГРАВИТАЦИЯ", "ГРУЗОВИК", "ДЕТЕКТИВ", "ДИНОЗАВР", "ДИСПЕТЧЕР", "ДИСТАНЦИЯ", "ДНЕВНИК", "ДОКУМЕНТ", "ДРАКОН", "ДРЕВНОСТЬ",
+    "ЕЖЕВИКА", "ЖЕЛЕЗО", "ЖЕМЧУГ", "ЖИВОПИСЬ", "ЖУРНАЛИСТ", "ЗАМОК", "ЗАРЯДКА", "ЗВЕЗДА", "ЗЕРКАЛО", "ЗОЛОТО",
+    "ЗООПАРК", "ИЗУМРУД", "ИЛЛЮЗИЯ", "ИМПЕРИЯ", "ИНСПЕКТОР", "ИНТЕРНЕТ", "ИНФОРМАЦИЯ", "ИСТОРИЯ", "КАБИНЕТ", "КАБРИОЛЕТ",
+    "КАКТУС", "КАЛЬКУЛЯТОР", "КАМЕНЬ", "КАНИКУЛЫ", "КАПИТАН", "КАРАВАН", "КАРНАВАЛ", "КАРТИНА", "КАРУСЕЛЬ", "КАРТОФЕЛЬ",
+    "КАСТРЮЛЯ", "КАТАСТРОФА", "КВАДРАТ", "КВАРТИРА", "КИНОТЕАТР", "КИРПИЧ", "КЛАВИАТУРА", "КЛИЕНТ", "КОВЕР", "КОМАНДИР",
+    "КОМЕДИЯ", "КОМПЬЮТЕР", "КОМПОТ", "КОНСЕРВЫ", "КОНСОЛЬ", "КОНТАКТ", "КОНТЕЙНЕР", "КОНТРОЛЬ", "КОНФЕТА", "КОРАБЛЬ",
+    "КОРАЛЛ", "КОРЗИНА", "КОРИДОР", "КОРОБКА", "КОРОНА", "КОСМОНАВТ", "КОСТЮМ", "КОФЕВАРКА", "КРАТЕР", "КРЕДИТ",
+    "КРЕПОСТЬ", "КРИСТАЛЛ", "КРОКОДИЛ", "КРОССВОРД", "КУЗНЕЦ", "КУЛЬТУРА", "КУПОЛ", "КУРОРТ", "КУРСОР", "КУХНЯ",
+    "ЛАБОРАТОРИЯ", "ЛАВИНА", "ЛАГЕРЬ", "ЛАМПА", "ЛАНДШАФТ", "ЛАСТОЧКА", "ЛЕБЕДЬ", "ЛЕГЕНДА", "ЛЕДНИК", "ЛИМОНАД",
+    "ЛИНЕЙКА", "ЛИФТ", "ЛОДКА", "ЛОКОМОТИВ", "ЛУНАПАРК", "ЛЫЖНИК", "ЛЮСТРА", "ЛЯГУШКА", "МАГАЗИН", "МАГИЯ",
+    "МАГНИТ", "МАКЕТ", "МАЛИНА", "МАМОНТ", "МАРАФОН", "МАРКЕР", "МАРМЕЛАД", "МАРШРУТ", "МАСКАРАД", "МАСТЕР",
+    "МАТЕМАТИКА", "МАТРИЦА", "МАШИНА", "МЕДВЕДЬ", "МЕДИЦИНА", "МЕДУЗА", "МЕЛОДИЯ", "МЕЛЬНИЦА", "МЕНЕДЖЕР", "МЕРКУРИЙ",
+    "МЕТАЛЛ", "МЕТЕОР", "МЕХАНИК", "МЕЧТА", "МИКРОБ", "МИКРОФОН", "МИЛЛИОН", "МИНЕРАЛ", "МИНИСТР", "МИСТИКА",
+    "МОБИЛЬНИК", "МОДЕЛЬ", "МОДУЛЬ", "МОЛОКО", "МОЛОТОК", "МОНАСТЫРЬ", "МОНЕТА", "МОНИТОР", "МОРКОВЬ", "МОРОЗ",
+    "МОТОР", "МУЗЕЙ", "МУЗЫКАНТ", "МУРАВЕЙ", "МУХОМОР", "НАВИГАТОР", "НАГРАДА", "НАДЕЖДА", "НЕБОСКРЕБ", "НОУТБУК",
+    "ОБЛАКО", "ОБЪЕКТ", "ОКЕАН", "ОПЕРАЦИЯ", "ОРКЕСТР", "ОСТРОВ", "ОФИЦЕР", "ПАРАШЮТ", "ПАРОХОД", "ПАСПОРТ",
+    "ПЕШЕХОД", "ПИРАМИДА", "ПИРАТ", "ПЛАНЕТА", "ПЛАНШЕТ", "ПЛАТФОРМА", "ПОДАРОК", "ПОЛЕДЖ", "ПОЛИЦИЯ", "ПОРТФЕЛЬ",
+    "ПРОГРАММА", "ПРОФЕССОР", "ПРОЖЕКТОР", "ПРАЗДНИК", "ПРИКЛЮЧЕНИЕ", "РАДИО", "РАКЕТА", "РЕАКТОР", "РЕСТОРАН", "РОБОТ",
+    "РЮКЗАК", "САМОЛЕТ", "СВЕТОФОР", "СЕРВЕР", "СИМФОНИЯ", "СКАНЕР", "СКОРОСТЬ", "СКРИПКА", "СОЛНЦЕ", "СПАСАТЕЛЬ",
+    "СПУТНИК", "СТАДИОН", "СТАНЦИЯ", "СТРАТЕГИЯ", "СТРОИТЕЛЬ", "СУПЕРМАРКЕТ", "ТАБЛЕТКА", "ТЕЛЕСКОП", "ТЕЛЕФОН", "ТЕРРИТОРИЯ",
+    "ТЕХНИКА", "ТОННЕЛЬ", "ТРАКТОР", "ТРАМВАЙ", "ТРАНСПОРТ", "ТРЕНЕР", "ТУРИСТ", "ТОРНАДО", "УНИВЕРСИТЕТ", "УРАГАН",
+    "ФАБРИКА", "ФАКЕЛ", "ФАНТАЗИЯ", "ФЕСТИВАЛЬ", "ФИЛЬМ", "ФОНАРЬ", "ФОТОАППАРАТ", "ФУТБОЛ", "ХАКЕР", "ХИМИЯ",
+    "ХОЛОДИЛЬНИК", "ХУДОЖНИК", "ЦЕМЕНТ", "ЦИРК", "ЧЕМОДАН", "CHAMPION", "ШАХМАТЫ", "ШОКОЛАД", "ШПИОН", "ЭКСПЕРИМЕНТ",
+    "ЭЛЕКТРИЧЕСТВО", "ЭНЕРГИЯ", "ЭКСКУРСИЯ", "ЭКРАН", "ЭКСКАВАТОР", "ЭКСПРЕСС", "ЮВЕЛИР", "ЮПИТЕР", "ЯХТА", "ЯЩЕРИЦА"
+];
+
+document.getElementById("total_words").innerText = realWords.length;
+
+let selectedWord = "";
+let guessedLetters = [];
+let errors = 0;
+const maxErrors = 6;
+
+function initGame() {
+    selectedWord = realWords[Math.floor(Math.random() * realWords.length)];
+    guessedLetters = [];
+    errors = 0;
+    
+    document.getElementById("errors").innerText = errors;
+    document.getElementById("restart_btn").style.display = "none";
+    renderWord();
+    renderKeyboard();
+}
+
+function renderWord() {
+    let displayText = "";
+    let finished = true;
+    for (let char of selectedWord) {
+        if (guessedLetters.includes(char)) {
+            displayText += char + " ";
+        } else {
+            displayText += "_ ";
+            finished = false;
+        }
+    }
+    document.getElementById("word_container").innerText = displayText.trim();
+    
+    if (finished) {
+        document.getElementById("word_container").innerHTML = "<span style='color:#3fb950;'>🎉 ПОБЕДА!</span><br><small style='font-size:16px; color:#8b949e;'>Слово: " + selectedWord + "</small>";
+        disableAllKeys();
+        document.getElementById("restart_btn").style.display = "block";
+    } else if (errors >= maxErrors) {
+        document.getElementById("word_container").innerHTML = "<span style='color:#f85149;'>💀 ПРОИГРЫШ!</span><br><small style='font-size:16px; color:#8b949e;'>Было загадано: " + selectedWord + "</small>";
+        disableAllKeys();
+        document.getElementById("restart_btn").style.display = "block";
+    }
+}
+
+function renderKeyboard() {
+    let alphabet = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+    let keysHTML = "";
+    for (let char of alphabet) {
+        let disabled = guessedLetters.includes(char) || errors >= maxErrors ? "disabled" : "";
+        keysHTML += `<button class="key-btn" ${disabled} onclick="handleGuess('${char}')">${char}</button>`;
+    }
+    document.getElementById("keyboard").innerHTML = keysHTML;
+}
+
+function handleGuess(char) {
+    if (guessedLetters.includes(char) || errors >= maxErrors) return;
+    
+    guessedLetters.push(char);
+    
+    if (selectedWord.includes(char)) {
+        renderWord();
+        renderKeyboard();
+    } else {
+        errors++;
+        document.getElementById("errors").innerText = errors;
+        renderWord();
+        renderKeyboard();
+    }
+}
+
+function disableAllKeys() {
+    let btns = document.querySelectorAll(".key-btn");
+    btns.forEach(b => b.disabled = true);
+}
+
+initGame();
+</script>
+
+</body>
+</html>
+"""
+
+os.makedirs("hangman", exist_ok=True)
+with open("hangman/index.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+print("ВИСЕЛИЦА ИСПРАВЛЕНА: ТОЛЬКО НАСТОЯЩИЕ СЛОВА И КРУПНЫЕ КНОПКИ!")

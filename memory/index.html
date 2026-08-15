@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Игра</title>
+    <style>
+        body { background: #0f172a; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        .back { position: absolute; top: 20px; left: 20px; color: #94a3b8; text-decoration: none; font-weight: bold; background: #1e293b; padding: 10px 15px; border-radius: 8px; border: 1px solid #334155; }
+        .game-card { background: #1e293b; border: 1px solid #334155; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-width: 350px; width: 100%; }
+        h1 { color: #38bdf8; margin-top: 0; }
+        button { background: #38bdf8; color: #0f172a; border: none; padding: 12px 24px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 15px; width: 100%; }
+        button:active { background: #0ea5e9; }
+        .counter { font-size: 48px; font-weight: bold; color: #facc15; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <a href="../" class="back">← На главную</a>
+    <div class="game-card">
+        <h1>⚡ Мини-Игра</h1>
+        <p style="color: #94a3b8;">Жми на кнопку, набирай очки!</p>
+        <div class="counter" id="score">0</div>
+        <button onclick="addScore()">Клик!</button>
+    </div>
+    <script>
+        let count = 0;
+        function addScore() {
+            count++;
+            document.getElementById('score').innerText = count;
+        }
+    </script>
+</body>
+</html>

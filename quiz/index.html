@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 CYBER-QUIZ | Квантовая Викторина</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; text-align: center; padding: 15px 10px; margin: 0; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .container { width: 100%; max-width: 480px; background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+        .back-link { display: block; text-align: left; color: #58a6ff; text-decoration: none; margin-bottom: 15px; font-size: 14px; font-weight: bold; }
+        
+        .title { font-size: 20px; font-weight: 800; color: #a371f7; margin-bottom: 15px; text-transform: uppercase; text-shadow: 0 0 10px rgba(163, 113, 247, 0.4); }
+        
+        .progress-box { width: 100%; background: #010409; border-radius: 10px; padding: 4px; border: 1px solid #30363d; margin-bottom: 20px; }
+        .progress-bar { height: 8px; background: linear-gradient(90deg, #1f6feb, #a371f7); border-radius: 6px; width: 0%; transition: width 0.3s ease; }
+        
+        .meta-info { display: flex; justify-content: space-between; font-size: 13px; color: #8b949e; font-weight: bold; margin-bottom: 15px; }
+        
+        .question-card { background: #010409; border: 1px solid #30363d; border-radius: 12px; padding: 20px 15px; font-size: 18px; font-weight: bold; color: #f0f6fc; margin-bottom: 20px; line-height: 1.4; min-height: 90px; display: flex; align-items: center; justify-content: center; }
+        
+        .options-grid { display: flex; flex-direction: column; gap: 10px; }
+        .option-btn { width: 100%; background: #21262d; border: 1px solid #30363d; color: #58a6ff; font-size: 16px; font-weight: bold; padding: 14px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; text-align: center; }
+        .option-btn:active { transform: scale(0.98); background: #30363d; }
+        
+        .result-screen { display: none; }
+        .score-val { font-size: 48px; font-weight: 800; color: #238636; margin: 15px 0; text-shadow: 0 0 15px rgba(35, 134, 54, 0.4); }
+        .restart-btn { width: 100%; background: linear-gradient(135deg, #1f6feb, #a371f7); color: white; border: none; padding: 14px; font-size: 16px; font-weight: 800; border-radius: 10px; cursor: pointer; text-transform: uppercase; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="/" class="back-link">← На главную</a>
+    <div class="title">🧠 CYBER-QUIZ</div>
+
+    <div id="quiz_box">
+        <div class="progress-box">
+            <div class="progress-bar" id="progress_bar"></div>
+        </div>
+
+        <div class="meta-info">
+            <span id="q_counter">Вопрос 1/5</span>
+            <span id="score_counter">Очки: 0</span>
+        </div>
+
+        <div class="question-card" id="q_text">Загрузка...</div>
+
+        <div class="options-grid" id="options_container"></div>
+    </div>
+
+    <div class="result-screen" id="result_box">
+        <h2>🎉 ВИКТОРИНА ЗАВЕРШЕНА!</h2>
+        <div class="score-val" id="final_score">0/5</div>
+        <p id="result_msg" style="color: #8b949e; font-size: 15px;"></p>
+        <button class="restart-btn" onclick="restartQuiz()">⚡ Пройти снова</button>
+    </div>
+</div>
+
+<script>
+const questions = [
+    { q: "Сколько будет 2 + 2 * 2?", options: ["6", "8", "4"], correct: 0 },
+    { q: "Какое устройство управляет всей работой компьютера?", options: ["Видеокарта", "Процессор", "Оперативная память"], correct: 1 },
+    { q: "Какой язык программирования используется для веб-сайтов?", options: ["JavaScript", "Python", "C++"], correct: 0 },
+    { q: "Сколько бит в одном байте?", options: ["4", "8", "16"], correct: 1 },
+    { q: "Что означает HTML?", options: ["High Tech Markup Language", "HyperText Markup Language", "Home Tool Markup Language"], correct: 1 }
+];
+
+let currentQ = 0;
+let score = 0;
+
+function loadQuestion() {
+    let q = questions[currentQ];
+    document.getElementById("q_counter").innerText = `Вопрос ${currentQ + 1}/${questions.length}`;
+    document.getElementById("score_counter").innerText = `Очки: ${score}`;
+    document.getElementById("progress_bar").style.width = `${((currentQ) / questions.length) * 100}%`;
+    document.getElementById("q_text").innerText = q.q;
+
+    let optsContainer = document.getElementById("options_container");
+    optsContainer.innerHTML = "";
+
+    q.options.forEach((opt, index) => {
+        let btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(index);
+        optsContainer.appendChild(btn);
+    });
+}
+
+function checkAnswer(selectedIndex) {
+    if (selectedIndex === questions[currentQ].correct) {
+        score++;
+    }
+    currentQ++;
+
+    if (currentQ < questions.length) {
+        loadQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    document.getElementById("quiz_box").style.display = "none";
+    document.getElementById("result_box").style.display = "block";
+    document.getElementById("final_score").innerText = `${score}/${questions.length}`;
+    
+    let msg = "Отличный результат!";
+    if (score === questions.length) msg = "🏆 Абсолютный кибер-разум! 100% правильных ответов!";
+    else if (score < 3) msg = "Попробуй еще раз, ты можешь лучше!";
+    document.getElementById("result_msg").innerText = msg;
+}
+
+function restartQuiz() {
+    currentQ = 0;
+    score = 0;
+    document.getElementById("quiz_box").style.display = "block";
+    document.getElementById("result_box").style.display = "none";
+    loadQuestion();
+}
+
+loadQuestion();
+</script>
+
+</body>
+</html>

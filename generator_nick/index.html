@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Генератор Ников</title>
+    <style>
+        body { background: #0f172a; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; padding: 15px; }
+        .back { position: absolute; top: 20px; left: 20px; color: #94a3b8; text-decoration: none; font-weight: bold; background: #1e293b; padding: 10px 15px; border-radius: 8px; border: 1px solid #334155; }
+        .card { background: #1e293b; border: 1px solid #334155; padding: 35px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-width: 400px; width: 100%; }
+        h1 { color: #38bdf8; margin-top: 0; }
+        .nick-box { font-size: 22px; font-weight: bold; color: #facc15; margin: 25px 0; background: #0f172a; padding: 15px; border-radius: 10px; border: 1px dashed #475569; word-break: break-all; }
+        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 12px 24px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; transition: 0.2s; }
+        .btn:hover { background: #0ea5e9; transform: scale(1.02); }
+    </style>
+</head>
+<body>
+    <a href="../" class="back">← На главную</a>
+    <div class="card">
+        <h1>⚡ Генератор Ников</h1>
+        <div class="nick-box" id="nick">CyberNinja_99</div>
+        <button class="btn" onclick="generateNick()">Сгенерировать</button>
+    </div>
+    <script>
+        const parts1 = ['Shadow', 'Cyber', 'Dark', 'Neon', 'Viper', 'Ghost', 'Alpha', 'Mega', 'Savage', 'Zero'];
+        const parts2 = ['Sniper', 'Hacker', 'Demon', 'Phoenix', 'Wolf', 'Rider', 'Titan', 'Legend', 'Beast', 'Storm'];
+        function generateNick() {
+            let p1 = parts1[Math.floor(Math.random() * parts1.length)];
+            let p2 = parts2[Math.floor(Math.random() * parts2.length)];
+            let num = Math.floor(Math.random() * 900) + 100;
+            document.getElementById('nick').innerText = `${p1}_${p2}${num}`;
+        }
+    </script>
+</body>
+</html>

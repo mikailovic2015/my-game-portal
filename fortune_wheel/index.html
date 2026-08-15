@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Колесо Фортуны</title>
+    <style>
+        body { background: #0d1117; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
+        .back { display: inline-block; color: #58a6ff; text-decoration: none; margin-bottom: 20px; float: left; }
+        .clear { clear: both; }
+        .coins-counter {
+            background: #161b22; border: 1px solid #30363d; display: inline-block;
+            padding: 8px 20px; border-radius: 20px; font-size: 16px; font-weight: bold;
+            color: #d29922; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .wheel-container { position: relative; width: 280px; height: 280px; margin: 25px auto; }
+        .wheel {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: conic-gradient(
+                #3fb950 0deg 45deg, 
+                #58a6ff 45deg 90deg, 
+                #f85149 90deg 135deg, 
+                #bc8cff 135deg 180deg, 
+                #3fb950 180deg 225deg, 
+                #d29922 225deg 270deg, 
+                #f85149 270deg 315deg, 
+                #58a6ff 315deg 360deg
+            );
+            transition: transform 3.5s cubic-bezier(0.15, 0.9, 0.2, 1);
+            border: 6px solid #30363d;
+            box-shadow: 0 0 30px rgba(88, 166, 255, 0.4);
+        }
+        /* Указатель смотрит вниз на колесо + черный гвоздь-метка */
+        .pointer {
+            position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 22px solid #f0f6fc;
+            z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+        }
+        .nail {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 14px; height: 14px; background: #000000; border: 2px solid #30363d;
+            border-radius: 50%; z-index: 11; box-shadow: 0 2px 5px rgba(0,0,0,0.8);
+        }
+        .result-box { font-size: 20px; font-weight: bold; margin: 20px 0; min-height: 30px; }
+        .btn {
+            background: #238636; color: #fff; border: none; padding: 14px 40px; font-size: 16px;
+            font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.2s;
+            box-shadow: 0 4px 12px rgba(35, 134, 54, 0.4);
+        }
+        .btn:hover { background: #2ea043; }
+        .btn:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; box-shadow: none; }
+    </style>
+</head>
+<body>
+    <a href="/" class="back">← На главную</a>
+    <div class="clear"></div>
+    <h2>🎡 Колесо Фортуны</h2>
+
+    <div class="coins-counter">💰 Баланс: <span id="coins">500</span> монет</div>
+    
+    <div class="wheel-container">
+        <div class="nail"></div>
+        <div class="pointer"></div>
+        <div class="wheel" id="wheel"></div>
+    </div>
+
+    <div class="result-box" id="result">Крути барабан!</div>
+    <button class="btn" id="spinBtn" onclick="spinWheel()">Крутить (-50 монет)</button>
+
+    <script>
+        let currentRotation = 0;
+        let balance = 500;
+
+        const sectors = [
+            { name: "🎉 Крупный Выигрыш (+200)", type: "win", val: 200, color: "#3fb950" },
+            { name: "⚡ Бонус энергии (+50)", type: "win", val: 50, color: "#58a6ff" },
+            { name: "❌ Поражение (-100)", type: "lose", val: 100, color: "#f85149" },
+            { name: "💎 Двойной Удар (+150)", type: "win", val: 150, color: "#bc8cff" },
+            { name: "🏆 Победа! (+300)", type: "win", val: 300, color: "#3fb950" },
+            { name: "📉 Убыток монет (-150)", type: "lose", val: 150, color: "#d29922" },
+            { name: "💥 Полный провал (-200)", type: "lose", val: 200, color: "#f85149" },
+            { name: "🎁 Секретный приз (+100)", type: "win", val: 100, color: "#58a6ff" }
+        ];
+
+        function spinWheel() {
+            if (balance < 50) {
+                alert("Недостаточно монет для вращения!");
+                return;
+            }
+
+            balance -= 50; // Списываем стоимость ставки
+            updateCoins();
+
+            const wheel = document.getElementById('wheel');
+            const resultDiv = document.getElementById('result');
+            const btn = document.getElementById('spinBtn');
+
+            btn.disabled = true;
+            resultDiv.textContent = "Барабан крутится...";
+            resultDiv.style.color = "#f0f6fc";
+
+            const sectorIndex = Math.floor(Math.random() * sectors.length);
+            const degreesPerSector = 360 / sectors.length;
+            
+            const extraSpins = 360 * 5;
+            const targetRotation = extraSpins + (360 - (sectorIndex * degreesPerSector + degreesPerSector / 2));
+            
+            currentRotation += targetRotation - (currentRotation % 360);
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                const res = sectors[sectorIndex];
+                if (res.type === "win") {
+                    balance += res.val; // Плюс к балансу
+                    resultDiv.style.color = "#3fb950";
+                } else {
+                    balance -= res.val; // Минус к балансу
+                    resultDiv.style.color = "#f85149";
+                }
+                updateCoins();
+                resultDiv.textContent = res.name;
+                btn.disabled = false;
+            }, 3500);
+        }
+
+        function updateCoins() {
+            document.getElementById('coins').textContent = balance;
+        }
+    </script>
+</body>
+</html>

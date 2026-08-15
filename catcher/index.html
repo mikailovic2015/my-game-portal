@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🎯 CYBER-CATCHER | Квантовый Ловец</title>
+    <style>
+        * { box-sizing: border-box; touch-action: none; }
+        body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; text-align: center; padding: 15px 10px; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .container { width: 100%; max-width: 440px; background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+        .back-link { display: block; text-align: left; color: #58a6ff; text-decoration: none; margin-bottom: 10px; font-size: 14px; font-weight: bold; }
+        
+        .title { font-size: 20px; font-weight: 800; color: #3fb950; margin-bottom: 15px; text-transform: uppercase; text-shadow: 0 0 10px rgba(63, 185, 80, 0.4); }
+        
+        .score-board { display: flex; justify-content: space-between; background: #010409; border: 1px solid #30363d; padding: 10px 15px; border-radius: 10px; font-weight: bold; font-size: 15px; margin-bottom: 15px; }
+        .score-val { color: #58a6ff; }
+        .lives-val { color: #f85149; }
+        
+        canvas { background: #010409; border: 2px solid #30363d; border-radius: 12px; display: block; margin: 0 auto; max-width: 100%; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); }
+        
+        .game-over-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(13, 17, 23, 0.92); border-radius: 16px; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .restart-btn { background: linear-gradient(135deg, #238636, #1f6feb); color: white; border: none; padding: 14px 24px; font-size: 16px; font-weight: 800; border-radius: 10px; cursor: pointer; text-transform: uppercase; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="/" class="back-link">← На главную</a>
+    <div class="title">🎯 CYBER-CATCHER</div>
+
+    <div class="score-board">
+        <span>Счет: <span class="score-val" id="score_text">0</span></span>
+        <span>Жизни: <span class="lives-val" id="lives_text">❤️❤️❤️</span></span>
+    </div>
+
+    <canvas id="gameCanvas" width="360" height="420"></canvas>
+
+    <div class="game-over-overlay" id="gameOverBox">
+        <h2 style="color: #f85149; margin: 0 0 10px 0;">ИГРА ОКОНЧЕНА</h2>
+        <p id="final_score" style="font-size: 18px; font-weight: bold;">Итоговый счет: 0</p>
+        <button class="restart-btn" onclick="resetGame()">⚡ Играть снова</button>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let score = 0;
+let lives = 3;
+let isGameOver = false;
+
+const paddle = {
+    width: 80,
+    height: 12,
+    x: (canvas.width - 80) / 2,
+    y: canvas.height - 25,
+    speed: 7,
+    dx: 0
+};
+
+const ball = {
+    x: canvas.width / 2,
+    y: 30,
+    radius: 8,
+    speedY: 3.5,
+    speedX: 2
+};
+
+function drawPaddle() {
+    ctx.fillStyle = "#58a6ff";
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = "#58a6ff";
+    ctx.beginPath();
+    ctx.roundRect(paddle.x, paddle.y, paddle.width, paddle.height, 6);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+}
+
+function drawBall() {
+    ctx.fillStyle = "#e3b341";
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = "#e3b341";
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+}
+
+function resetBall() {
+    ball.x = Math.random() * (canvas.width - 40) + 20;
+    ball.y = 20;
+    ball.speedY = 3.5 + Math.min(score * 0.2, 5);
+    ball.speedX = (Math.random() - 0.5) * 4;
+}
+
+function update() {
+    if (isGameOver) return;
+
+    paddle.x += paddle.dx;
+    if (paddle.x < 0) paddle.x = 0;
+    if (paddle.x + paddle.width > canvas.width) paddle.x = canvas.width - paddle.width;
+
+    ball.x += ball.speedX;
+    ball.y += ball.speedY;
+
+    if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+        ball.speedX *= -1;
+    }
+
+    if (
+        ball.y + ball.radius >= paddle.y &&
+        ball.x >= paddle.x &&
+        ball.x <= paddle.x + paddle.width
+    ) {
+        score += 10;
+        document.getElementById("score_text").innerText = score;
+        resetBall();
+    }
+
+    if (ball.y + ball.radius > canvas.height) {
+        lives--;
+        updateLivesDisplay();
+        if (lives <= 0) {
+            endGame();
+        } else {
+            resetBall();
+        }
+    }
+}
+
+function updateLivesDisplay() {
+    let hearts = "";
+    for (let i = 0; i < lives; i++) hearts += "❤️";
+    document.getElementById("lives_text").innerText = hearts || "💀";
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawPaddle();
+    drawBall();
+}
+
+function gameLoop() {
+    update();
+    draw();
+    if (!isGameOver) requestAnimationFrame(gameLoop);
+}
+
+function endGame() {
+    isGameOver = true;
+    document.getElementById("final_score").innerText = "Итоговый счет: " + score;
+    document.getElementById("gameOverBox").style.display = "flex";
+}
+
+function resetGame() {
+    score = 0;
+    lives = 3;
+    isGameOver = false;
+    document.getElementById("score_text").innerText = score;
+    updateLivesDisplay();
+    document.getElementById("gameOverBox").style.display = "none";
+    resetBall();
+    gameLoop();
+}
+
+function handleMove(clientX) {
+    const rect = canvas.getBoundingClientRect();
+    const touchX = clientX - rect.left;
+    paddle.x = touchX - paddle.width / 2;
+}
+
+canvas.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    handleMove(e.touches[0].clientX);
+}, { passive: false });
+
+canvas.addEventListener("mousemove", (e) => {
+    handleMove(e.clientX);
+});
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") paddle.dx = -paddle.speed;
+    if (e.key === "ArrowRight") paddle.dx = paddle.speed;
+});
+
+document.addEventListener("keyup", (e) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") paddle.dx = 0;
+});
+
+resetBall();
+gameLoop();
+</script>
+
+</body>
+</html>

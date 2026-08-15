@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>КНБ (Ящерица)</title>
+    <style>
+        body { background: #0f172a; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; padding: 10px; }
+        .back { position: absolute; top: 20px; left: 20px; color: #94a3b8; text-decoration: none; font-weight: bold; background: #1e293b; padding: 10px 15px; border-radius: 8px; border: 1px solid #334155; }
+        .card { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-width: 400px; width: 100%; }
+        h1 { color: #38bdf8; margin-top: 0; font-size: 20px; }
+        .choices { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0; }
+        .btn-ch { background: #334155; color: #fff; border: 2px solid #475569; padding: 10px 14px; font-size: 14px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .btn-ch:hover { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
+        .res { font-size: 15px; color: #facc15; margin-top: 15px; min-height: 50px; }
+    </style>
+</head>
+<body>
+    <a href="../" class="back">← На главную</a>
+    <div class="card">
+        <h1>🦎 КНБ (Ящерица / Спок)</h1>
+        <div class="choices">
+            <button class="btn-ch" onclick="play('Камень')">✊ Камень</button>
+            <button class="btn-ch" onclick="play('Ножницы')">✌️ Ножницы</button>
+            <button class="btn-ch" onclick="play('Бумага')">🖐 Бумага</button>
+            <button class="btn-ch" onclick="play('Ящерица')">🦎 Ящерица</button>
+            <button class="btn-ch" onclick="play('Спок')">🖖 Спок</button>
+        </div>
+        <div class="res" id="res">Сделай ход!</div>
+    </div>
+    <script>
+        const arr = ['Камень', 'Ножницы', 'Бумага', 'Ящерица', 'Спок'];
+        const wins = {
+            'Камень': ['Ножницы', 'Ящерица'],
+            'Ножницы': ['Бумага', 'Ящерица'],
+            'Бумага': ['Камень', 'Спок'],
+            'Ящерица': ['Бумага', 'Спок'],
+            'Спок': ['Камень', 'Ножницы']
+        };
+        function play(u) {
+            let b = arr[Math.floor(Math.random() * arr.length)];
+            let t = `Ты: ${u} | Бот: ${b}.<br>`;
+            if (u === b) t += "🤝 Ничья!";
+            else if (wins[u].includes(b)) t += "🏆 Победа!";
+            else t += "💀 Поражение!";
+            document.getElementById('res').innerHTML = t;
+        }
+    </script>
+</body>
+</html>

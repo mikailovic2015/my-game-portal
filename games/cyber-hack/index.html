@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Кибер-Хакер: Сеть</title>
+    <style>
+        body { background: #030712; color: #38bdf8; font-family: monospace; display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
+        h2 { color: #22c55e; margin: 5px 0; }
+        .stats { font-size: 22px; color: #4ade80; font-weight: bold; margin-bottom: 15px; text-shadow: 0 0 10px rgba(34,197,94,0.4); }
+        .terminal-btn { width: 180px; height: 180px; background: #0f172a; border: 3px solid #22c55e; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; user-select: none; box-shadow: 0 0 30px rgba(34,197,94,0.3); transition: 0.05s; }
+        .terminal-btn:active { transform: scale(0.92); border-color: #38bdf8; box-shadow: 0 0 15px rgba(56,189,248,0.5); }
+        .icon { font-size: 50px; }
+        .shop { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 12px; width: 100%; max-width: 340px; margin-top: 20px; }
+        .shop h3 { color: #facc15; margin: 0 0 10px 0; font-size: 14px; text-align: center; }
+        .btn { background: #1e293b; color: #fff; border: 1px solid #334155; padding: 8px; border-radius: 6px; width: 100%; margin-top: 6px; cursor: pointer; display: flex; justify-content: space-between; font-family: monospace; font-size: 12px; }
+        .btn:hover { background: #334155; border-color: #22c55e; }
+        a { color: #38bdf8; text-decoration: none; font-size: 13px; margin-top: 20px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <h2>💻 CYBER_HACK.exe</h2>
+    <div class="stats" id="bytes">0 байтов</div>
+    
+    <div class="terminal-btn" onclick="hack()">
+        <div class="icon">⚡</div>
+        <div style="font-size: 12px; color: #22c55e; margin-top: 5px;">ВЗЛОМАТЬ</div>
+    </div>
+
+    <div class="shop">
+        <h3>🛒 ЧЕРНЫЙ РЫНОК УЛУЧШЕНИЙ</h3>
+        <button class="btn" onclick="buy('script')"><span>🤖 Скрипт (+1 Б/сек)</span><span id="c1" style="color:#22c55e;">30 байт</span></button>
+        <button class="btn" onclick="buy('botnet')"><span>🌐 Ботнет (+5 Б/сек)</span><span id="c2" style="color:#22c55e;">150 байт</span></button>
+        <button class="btn" onclick="buy('ai')"><span>🧠 ИИ-Взломщик (+25 Б/сек)</span><span id="c3" style="color:#22c55e;">800 байт</span></button>
+        <button class="btn" onclick="buy('quantum')"><span>⚛️ Квантовый чип (+100 Б/клик)</span><span id="c4" style="color:#22c55e;">2000 байт</span></button>
+    </div>
+
+    <a href="../../">← На главную портала</a>
+
+    <script>
+        let bytes = 0, clickPower = 1, autoBPS = 0;
+        let costs = { script: 30, botnet: 150, ai: 800, quantum: 2000 };
+        let power = { script: 1, botnet: 5, ai: 25, quantumPower: 100 };
+
+        function hack() { bytes += clickPower; update(); }
+
+        function buy(item) {
+            let cost = costs[item];
+            if (bytes >= cost) {
+                bytes -= cost;
+                if (item === 'quantum') { clickPower += 10; costs[item] = Math.floor(cost * 1.8); }
+                else { autoBPS += power[item]; costs[item] = Math.floor(cost * 1.5); }
+                update();
+            }
+        }
+
+        setInterval(() => { if (autoBPS > 0) { bytes += autoBPS; update(); } }, 1000);
+
+        function update() {
+            document.getElementById('bytes').innerText = bytes + ' байтов';
+            document.getElementById('c1').innerText = costs.script + ' байт';
+            document.getElementById('c2').innerText = costs.botnet + ' байт';
+            document.getElementById('c3').innerText = costs.ai + ' байт';
+            document.getElementById('c4').innerText = costs.quantum + ' байт';
+        }
+    </script>
+</body>
+</html>
