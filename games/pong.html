@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Понг</title>
+    <style>
+        body { background: #111; color: #0f0; text-align: center; font-family: sans-serif; }
+        canvas { background: #000; border: 2px solid #0f0; }
+        button { margin: 5px; padding: 10px 20px; background: #0f0; color: #000; font-weight: bold; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Кибер Понг</h2>
+    <canvas id="cv" width="300" height="300"></canvas>
+    <div><button onclick="px-=25">Влево</button><button onclick="px+=25">Вправо</button></div>
+    <script>
+        const ctx = document.getElementById('cv').getContext('2d');
+        let bx=150, by=150, dx=2, dy=2, px=110, sc=0;
+        setInterval(()=>{
+            ctx.clearRect(0,0,300,300);
+            ctx.fillStyle='#fff'; ctx.fillRect(bx,by,10,10);
+            ctx.fillStyle='#0f0'; ctx.fillRect(px,280,80,10);
+            bx+=dx; by+=dy;
+            if(bx<0||bx>290) dx=-dx;
+            if(by<0) dy=-dy;
+            if(by>270 && bx>=px && bx<=px+80) { dy=-dy; sc++; }
+            if(by>300) { alert('Счет: '+sc); location.reload(); }
+        }, 30);
+    </script>
+</body>
+</html>

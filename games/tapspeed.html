@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Тап</title>
+    <style>
+        body { background: #2c3e50; color: #ecf0f1; text-align: center; font-family: sans-serif; padding-top: 40px; }
+        #btn { width: 150px; height: 150px; background: #e74c3c; color: #fff; border-radius: 50%; font-size: 20px; font-weight: bold; border: none; cursor: pointer; margin: 20px auto; display: block; }
+    </style>
+</head>
+<body>
+    <h2>Скорость Тапа</h2>
+    <h3 id="timer">Жми кнопку!</h3>
+    <h1 id="score">0</h1>
+    <button id="btn" onclick="tap()">ТАП!</button>
+    <script>
+        let count = 0, started = false;
+        function tap() {
+            if(!started) {
+                started = true;
+                let t = 5;
+                document.getElementById('timer').innerText = 'Осталось: ' + t + ' сек';
+                let interval = setInterval(() => {
+                    t--;
+                    document.getElementById('timer').innerText = 'Осталось: ' + t + ' сек';
+                    if(t <= 0) {
+                        clearInterval(interval);
+                        alert('Время вышло! Кликов: ' + count);
+                        location.reload();
+                    }
+                }, 1000);
+            }
+            count++;
+            document.getElementById('score').innerText = count;
+        }
+    </script>
+</body>
+</html>

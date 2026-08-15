@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Змейка</title>
+    <style>
+        body { background: #000; color: #0ff; text-align: center; font-family: sans-serif; margin: 0; padding-top: 20px; }
+        canvas { background: #111; border: 2px solid #0ff; box-shadow: 0 0 15px #0ff; }
+        .btn-box { margin-top: 10px; }
+        button { padding: 10px 15px; background: #0ff; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; margin: 3px; }
+    </style>
+</head>
+<body>
+    <h2>Неоновая Змейка</h2>
+    <h3 id="sc">Счет: 0</h3>
+    <canvas id="cv" width="300" height="300"></canvas>
+    <div class="btn-box">
+        <button onclick="dir='UP'">Вверх</button><br>
+        <button onclick="dir='LEFT'">Влево</button>
+        <button onclick="dir='DOWN'">Вниз</button>
+        <button onclick="dir='RIGHT'">Вправо</button>
+    </div>
+    <script>
+        const ctx = document.getElementById('cv').getContext('2d');
+        let snake = [{x: 150, y: 150}], food = {x: 100, y: 100}, dir = 'RIGHT', score = 0;
+        function game() {
+            let head = {x: snake[0].x, y: snake[0].y};
+            if(dir == 'UP') head.y -= 10;
+            if(dir == 'DOWN') head.y += 10;
+            if(dir == 'LEFT') head.x -= 10;
+            if(dir == 'RIGHT') head.x += 10;
+            if(head.x < 0 || head.x >= 300 || head.y < 0 || head.y >= 300) { alert('Игра окончена!'); location.reload(); return; }
+            if(head.x == food.x && head.y == food.y) { score++; document.getElementById('sc').innerText = 'Счет: ' + score; food = {x: Math.floor(Math.random()*30)*10, y: Math.floor(Math.random()*30)*10}; } else { snake.pop(); }
+            snake.unshift(head);
+            ctx.fillStyle = '#111'; ctx.fillRect(0,0,300,300);
+            ctx.fillStyle = '#f00'; ctx.fillRect(food.x, food.y, 10, 10);
+            ctx.fillStyle = '#0ff'; snake.forEach(p => ctx.fillRect(p.x, p.y, 10, 10));
+        }
+        setInterval(game, 100);
+    </script>
+</body>
+</html>

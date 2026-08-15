@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Память</title>
+    <style>
+        body { background: #222; color: #fff; text-align: center; font-family: sans-serif; }
+        .grid { display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; justify-content: center; margin: 20px auto; }
+        .cell { width: 70px; height: 70px; background: #444; border-radius: 8px; cursor: pointer; }
+        .active { background: #0ff; box-shadow: 0 0 15px #0ff; }
+    </style>
+</head>
+<body>
+    <h2>Матрица Памяти</h2>
+    <p id="msg">Запомни синий квадрат!</p>
+    <div class="grid" id="g"></div>
+    <script>
+        const g = document.getElementById('g'); let target = Math.floor(Math.random()*9), clicked = false;
+        for(let i=0; i<9; i++) {
+            let div = document.createElement('div'); div.className = 'cell';
+            div.onclick = () => {
+                if(clicked) return;
+                if(i === target) { div.style.background = '#0f0'; document.getElementById('msg').innerText = 'Победа!'; }
+                else { div.style.background = '#f00'; document.getElementById('msg').innerText = 'Ошибка!'; }
+                clicked = true;
+            };
+            g.appendChild(div);
+        }
+        let cells = document.getElementsByClassName('cell');
+        cells[target].classList.add('active');
+        setTimeout(() => cells[target].classList.remove('active'), 1000);
+    </script>
+</body>
+</html>

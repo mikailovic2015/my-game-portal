@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Космос</title>
+    <style>
+        body { background: #000; color: #fff; text-align: center; font-family: sans-serif; }
+        canvas { background: #05001a; border: 2px solid #a0f; box-shadow: 0 0 15px #a0f; }
+        button { padding: 10px 20px; background: #a0f; color: #fff; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h2>Космический Защитник</h2>
+    <h3 id="sc">Очки: 0</h3>
+    <canvas id="cv" width="300" height="300"></canvas>
+    <p>Жми по экрану для выстрела!</p>
+    <script>
+        const ctx = document.getElementById('cv').getContext('2d');
+        let astY = 0, astX = Math.random()*260, score = 0, laserY = -1;
+        document.getElementById('cv').onclick = () => { laserY = 250; };
+        setInterval(() => {
+            ctx.clearRect(0,0,300,300);
+            ctx.fillStyle = '#f50'; ctx.fillRect(astX, astY, 20, 20);
+            ctx.fillStyle = '#0ff'; ctx.fillRect(140, 270, 20, 20);
+            if(laserY > -1) { ctx.fillStyle = '#ff0'; ctx.fillRect(148, laserY, 4, 15); laserY -= 15; }
+            if(laserY <= astY && laserY > -1 && Math.abs(148 - astX) < 20) { score++; document.getElementById('sc').innerText = 'Очки: ' + score; astY = 0; astX = Math.random()*260; laserY = -1; }
+            astY += 2;
+            if(astY > 300) { astY = 0; astX = Math.random()*260; }
+        }, 30);
+    </script>
+</body>
+</html>

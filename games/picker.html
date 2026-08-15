@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Цвета</title>
+    <style>
+        body { background: #222; color: #fff; text-align: center; font-family: sans-serif; padding-top: 40px; }
+        #box { width: 150px; height: 150px; background: #3498db; margin: 20px auto; border-radius: 12px; }
+        button { padding: 12px 25px; font-size: 16px; background: #3498db; color: #fff; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Генератор Цветов</h2>
+    <div id="box"></div>
+    <h3 id="hex">#3498db</h3>
+    <button onclick="newCol()">Новый цвет</button>
+    <script>
+        function newCol() {
+            let col = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+            document.getElementById('box').style.background = col;
+            document.getElementById('hex').innerText = col;
+        }
+    </script>
+</body>
+</html>

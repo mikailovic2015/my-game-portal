@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Математика</title>
+    <style>
+        body { background: #1a1a2e; color: #e94560; text-align: center; font-family: sans-serif; padding-top: 30px; }
+        input, button { padding: 12px; font-size: 18px; margin: 5px; border-radius: 5px; border: none; }
+        button { background: #e94560; color: #fff; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Мат. Блиц</h2>
+    <h1 id="ex">5 + 3 = ?</h1>
+    <input id="ans" type="number">
+    <br><button onclick="check()">Ответить</button>
+    <p id="res" style="font-size: 20px; color: #fff;"></p>
+    <script>
+        let a = 5, b = 3, ans = 8;
+        function check() {
+            let v = document.getElementById('ans').value;
+            if(v == ans) {
+                document.getElementById('res').innerText = "Верно!";
+                a = Math.floor(Math.random()*10)+1;
+                b = Math.floor(Math.random()*10)+1;
+                ans = a + b;
+                document.getElementById('ex').innerText = a + " + " + b + " = ?";
+            } else {
+                document.getElementById('res').innerText = "Ошибка!";
+            }
+            document.getElementById('ans').value = '';
+        }
+    </script>
+</body>
+</html>

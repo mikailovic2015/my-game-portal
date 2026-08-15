@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Монета</title>
+    <style>
+        body { background: #111; color: #f1c40f; text-align: center; font-family: sans-serif; padding-top: 40px; }
+        #coin { width: 120px; height: 120px; background: #f1c40f; color: #000; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; box-shadow: 0 0 20px #f1c40f; }
+        button { padding: 12px 25px; font-size: 18px; background: #f1c40f; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h2>Орел или Решка</h2>
+    <div id="coin">МОНЕТА</div>
+    <br>
+    <button onclick="flip()">Подбросить</button>
+    <script>
+        function flip() {
+            let c = document.getElementById('coin');
+            c.innerText = "Крутим...";
+            setTimeout(() => {
+                c.innerText = Math.random() < 0.5 ? "ОРЕЛ" : "РЕШКА";
+            }, 500);
+        }
+    </script>
+</body>
+</html>
