@@ -492,6 +492,29 @@ function filterGames() {
 </script>
 
 
-    </body>
+    
+<div id="forgot-modal" class="modal" onclick="closeModal('forgot-modal', event)" style="display: none;">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3 style="color: #58a6ff; margin-bottom: 5px;">🔑 Восстановление</h3>
+        <p style="font-size: 12px; color: #8b949e; margin-bottom: 10px;">Введите ваш Gmail, мы сгенерируем ссылку для сброса пароля прямо здесь.</p>
+        
+        <input type="email" id="reset-email" placeholder="Ваш Gmail" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px;">
+        
+        <!-- Капча из случайного примера -->
+        <div style="background: #161b22; padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #30363d;">
+            <p id="captcha-question" style="font-size: 13px; color: #c9d1d9; margin-bottom: 5px;"></p>
+            <input type="number" id="captcha-input" placeholder="Ответ" style="width: 100%; padding: 8px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px;">
+        </div>
+
+        <button onclick="verifyAndGetResetLink()" style="width: 100%; padding: 10px; background: #238636; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 10px;">Получить ссылку</button>
+        
+        <!-- Блок, куда выведется ссылка -->
+        <div id="reset-result-box" style="display: none; background: #161b22; padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #30363d; font-size: 12px; word-break: break-all;"></div>
+
+        <button onclick="closeModal('forgot-modal', event)" style="width: 100%; padding: 8px; background: transparent; color: #8b949e; border: none; cursor: pointer;">Назад ко входу</button>
+    </div>
+</div>
+
+</body>
 </html>
 
