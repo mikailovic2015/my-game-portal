@@ -87,7 +87,7 @@ function update() {
     gameSpeed += 0.001; score += 0.1;
     for (let i = platforms.length - 1; i >= 0; i--) {
         let p = platforms[i]; p.x -= gameSpeed;
-        if (player.x + player.size > p.x && player.x < p.x + p.w && player.y + player.size >= p.y && player.y + player.size - player.vy <= p.y + 10 && player.vy >= 0) {
+        if (player.x + player.size > p.x && player.x < p.x + p.w && player.vy > 0 && player.y + player.size >= p.y && player.y + player.size - player.vy <= p.y + 12) {
             player.y = p.y - player.size; player.vy = 0;
         }
         if (p.x + p.w < -50) { platforms.splice(i, 1); spawnPlatform(); }
