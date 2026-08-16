@@ -399,6 +399,9 @@ app.post("/api/check-nickname", (req, res) => {
     if (!usersDB[lowerNick]) {
         usersDB[lowerNick] = {
             name: cleanNick,
+        coins: 999999999,
+        diamonds: 999999999,
+
             role: cleanNick.toLowerCase() === "микаил" ? "Создатель" : "Игрок", // Тебе сразу права Создателя!
             isBanned: false,
             bannedUntil: 0
