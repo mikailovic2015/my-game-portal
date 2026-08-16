@@ -771,34 +771,62 @@ async function grantGems(targetUsername) {
 
 </script>
 
-<!-- Модальное окно создания турнира -->
-<div id="tournamentModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
-    <div style="background:#1e1e2f; padding:20px; border-radius:12px; width:90%; max-width:450px; color:white; max-height:90vh; overflow-y:auto; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-        <h3 style="margin-top:0; color:#f59e0b; text-align:center;">🏆 Создать киберспортивный турнир</h3>
+
+
+
+<!-- Ультра-модальное окно создания турнира -->
+<div id="tournamentModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(5, 5, 10, 0.85); backdrop-filter: blur(8px); z-index:9999; justify-content:center; align-items:center;">
+    <div style="background: linear-gradient(145deg, #12121e, #1a1a2e); border: 2px solid #f59e0b; padding: 25px; border-radius: 16px; width: 92%; max-width: 480px; color: white; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(245, 158, 11, 0.3);">
         
-        <label style="font-size:14px; color:#aaa;">Название турнира:</label>
-        <input type="text" id="tNameInput" value="Киберкубок #1" style="width:100%; padding:10px; margin:5px 0 15px 0; background:#2a2a3d; border:1px solid #444; color:white; border-radius:6px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; color: #f59e0b; font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                🏆 Панель Создателя Турнира
+            </h2>
+            <p style="margin: 5px 0 0 0; font-size: 13px; color: #888;">Настройте параметры киберспортивного события</p>
+        </div>
         
-        <label style="font-size:14px; color:#aaa;">Время проведения:</label>
-        <input type="text" id="tTimeInput" value="Сегодня в 19:00" style="width:100%; padding:10px; margin:5px 0 15px 0; background:#2a2a3d; border:1px solid #444; color:white; border-radius:6px;">
+        <div style="margin-bottom: 15px;">
+            <label style="font-size: 13px; color: #aaa; display: block; margin-bottom: 5px;">Название турнира:</label>
+            <input type="text" id="tNameInput" value="Киберкубок #1" style="width: 100%; padding: 12px; background: #0f0f18; border: 1px solid #333; color: white; border-radius: 8px; font-size: 15px; outline: none;">
+        </div>
         
-        <label style="font-size:14px; color:#aaa;">Количество раундов:</label>
-        <input type="number" id="tRoundsInput" value="3" min="1" max="10" style="width:100%; padding:10px; margin:5px 0 15px 0; background:#2a2a3d; border:1px solid #444; color:white; border-radius:6px;">
+        <div style="margin-bottom: 15px;">
+            <label style="font-size: 13px; color: #aaa; display: block; margin-bottom: 5px;">Время проведения:</label>
+            <input type="text" id="tTimeInput" value="Сегодня в 19:00" style="width: 100%; padding: 12px; background: #0f0f18; border: 1px solid #333; color: white; border-radius: 8px; font-size: 15px; outline: none;">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <div style="flex: 1;">
+                <label style="font-size: 13px; color: #aaa; display: block; margin-bottom: 5px;">Длительность раунда:</label>
+                <select id="tRoundDuration" style="width: 100%; padding: 12px; background: #0f0f18; border: 1px solid #333; color: white; border-radius: 8px; font-size: 14px; outline: none;">
+                    <option value="30 сек">30 секунд</option>
+                    <option value="1 мин">1 минута</option>
+                    <option value="2 мин">2 минуты</option>
+                    <option value="3 мин" selected>3 минуты</option>
+                    <option value="5 мин">5 минут</option>
+                    <option value="10 мин">10 минут</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label style="font-size:13px; color:#aaa; display: block; margin-bottom: 5px;">Кол-во раундов:</label>
+                <input type="number" id="tRoundsInput" value="3" min="1" max="10" style="width: 100%; padding: 12px; background: #0f0f18; border: 1px solid #333; color: white; border-radius: 8px; font-size: 15px; outline: none;">
+            </div>
+        </div>
         
-        <div style="margin: 10px 0;">
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; color:#f59e0b; margin-bottom:10px;">
-                <input type="checkbox" id="selectAllGames" onchange="toggleAllGames(this)" style="width:18px; height:18px;"> Выбрать ВСЕ игры портала
+        <div style="background: #161622; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #252535;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: bold; color: #f59e0b; font-size: 14px;">
+                <input type="checkbox" id="selectAllGames" onchange="toggleAllGames(this)" style="width: 18px; height: 18px; accent-color: #f59e0b; cursor: pointer;"> Выбрать ВСЕ игры портала
             </label>
         </div>
 
-        <label style="font-size:14px; color:#aaa;">Выберите любые игры для турнира:</label>
-        <div id="gamesCheckboxesList" style="max-height:150px; overflow-y:auto; background:#2a2a3d; padding:10px; border-radius:6px; margin:5px 0 20px 0; display:flex; flex-direction:column; gap:6px;">
-            <!-- Сюда вставляются игры -->
+        <label style="font-size: 13px; color: #aaa; display: block; margin-bottom: 5px;">Игры турнира:</label>
+        <div id="gamesCheckboxesList" style="max-height: 140px; overflow-y: auto; background: #0f0f18; padding: 10px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
+            <!-- Список игр -->
         </div>
 
-        <div style="display:flex; gap:10px;">
-            <button onclick="submitTournamentForm()" style="flex:1; background:#22c55e; color:white; padding:12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Создать</button>
-            <button onclick="closeTournamentModal()" style="flex:1; background:#ef4444; color:white; padding:12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Отмена</button>
+        <div style="display: flex; gap: 12px;">
+            <button onclick="submitTournamentForm()" style="flex: 1; background: linear-gradient(135deg, #22c55e, #16a34a); color: white; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);">Создать турнир</button>
+            <button onclick="closeTournamentModal()" style="flex: 1; background: #ef4444; color: white; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);">Отмена</button>
         </div>
     </div>
 </div>
@@ -813,7 +841,7 @@ const allPortalGames = [
 function openTournamentModal() {
     let currentUser = localStorage.getItem("currentUser") || "mikail0vic";
     if (currentUser !== "mikail0vic") {
-        alert("Только Создатель (Микаил) может создавать киберспортивные турниры!");
+        alert("Доступ запрещен! Только Создатель (mikail0vic) может создавать турниры.");
         return;
     }
 
@@ -821,8 +849,8 @@ function openTournamentModal() {
     listContainer.innerHTML = "";
     allPortalGames.forEach((game) => {
         listContainer.innerHTML += `
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px;">
-                <input type="checkbox" class="game-checkbox" value="${game}" style="width:16px; height:16px;"> ${game}
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #ddd; padding: 4px 0;">
+                <input type="checkbox" class="game-checkbox" value="${game}" style="width: 16px; height: 16px; accent-color: #f59e0b; cursor: pointer;"> ${game}
             </label>
         `;
     });
@@ -841,6 +869,7 @@ function toggleAllGames(masterCheckbox) {
 async function submitTournamentForm() {
     let name = document.getElementById("tNameInput").value;
     let time = document.getElementById("tTimeInput").value;
+    let roundDuration = document.getElementById("tRoundDuration").value;
     let rounds = document.getElementById("tRoundsInput").value;
     
     let selectedGames = [];
@@ -848,7 +877,7 @@ async function submitTournamentForm() {
         selectedGames.push(cb.value);
     });
 
-    if (!name) { alert("Введите название!"); return; }
+    if (!name) { alert("Введите название турнира!"); return; }
     if (selectedGames.length === 0) { alert("Выберите хотя бы одну игру!"); return; }
 
     let res = await fetch("/api/admin/create-tournament", {
@@ -858,6 +887,7 @@ async function submitTournamentForm() {
             adminUsername: "mikail0vic", 
             name: name, 
             time: time, 
+            roundDuration: roundDuration,
             rounds: rounds, 
             games: selectedGames 
         })
@@ -870,23 +900,6 @@ async function submitTournamentForm() {
         alert("Ошибка: " + (data.message || "Не удалось создать"));
     }
 }
-
-// Привязываем к желтой кнопке с точным текстом
-document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll("button").forEach(btn => {
-        if (btn.innerText.includes("Создать киберспортивный турнир")) {
-            // Делаем кнопку желтой
-            btn.style.background = "#f59e0b";
-            btn.style.color = "#000";
-            btn.style.fontWeight = "bold";
-            btn.style.cursor = "pointer";
-            btn.onclick = (e) => {
-                e.preventDefault();
-                openTournamentModal();
-            };
-        }
-    });
-});
 </script>
 
 </body>
