@@ -553,6 +553,154 @@ function filterGames() {
 
 </div>
 </div>
+
+<!-- Модальное окно входа по нику -->
+<div id="nickname-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(13,17,23,0.95); z-index:9999; justify-content:center; align-items:center;">
+    <div style="background:#161b22; border:1px solid #30363d; padding:25px; border-radius:12px; width:320px; text-align:center;">
+        <h3 style="color:#f0f6fc; margin-bottom:10px;">🎮 Вход на портал</h3>
+        <p style="color:#8b949e; font-size:13px; margin-bottom:15px;">Введи свой уникальный никнейм:</p>
+        <input type="text" id="nickname-input" placeholder="Твой ник..." style="width:100%; padding:10px; background:#0d1117; border:1px solid #30363d; color:white; border-radius:6px; box-sizing:border-box; margin-bottom:10px; outline:none;">
+        <div id="nickname-error" style="color:#f85149; font-size:12px; margin-bottom:10px; display:none;"></div>
+        <button onclick="saveNickname()" style="width:100%; padding:10px; background:#238636; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Войти</button>
+    </div>
+</div>
+
+<!-- Панель управления (Админка) -->
+<div id="admin-panel" style="display:none; background:#161b22; border:1px solid #30363d; padding:20px; border-radius:12px; margin:20px auto; max-width:900px; color:#c9d1d9;">
+    <h3 style="color:#58a6ff; margin-top:0;">🛡️ Панель Администратора</h3>
+    <p style="font-size:13px; color:#8b949e;">Список всех игроков на портале, управление банами и ролями:</p>
+    <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:left;">
+            <thead>
+                <tr style="border-bottom:1px solid #30363d; color:#8b949e;">
+                    <th style="padding:8px;">Игрок</th>
+                    <th style="padding:8px;">Роль</th>
+                    <th style="padding:8px;">Статус</th>
+                    <th style="padding:8px;">Действия</th>
+                </tr>
+            </thead>
+            <tbody id="admin-users-list">
+                <tr><td colspan="4" style="padding:10px; text-align:center;">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const savedNick = localStorage.getItem("portal_nickname");
+    if (!savedNick) {
+        document.getElementById("nickname-modal").style.display = "flex";
+    } else {
+        checkAndRegister(savedNick);
+    }
+});
+
+function saveNickname() {
+    const nick = document.getElementById("nickname-input").value.trim();
+    const errBox = document.getElementById("nickname-error");
+    if (!nick) {
+        errBox.innerText = "Введите ник!";
+        errBox.style.display = "block";
+        return;
+    }
+    fetch("/api/check-nickname", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: nick })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            localStorage.setItem("portal_nickname", data.nickname);
+            localStorage.setItem("portal_role", data.role);
+            document.getElementById("nickname-modal").style.display = "none";
+            location.reload();
+        } else {
+            errBox.innerText = data.error;
+            errBox.style.display = "block";
+        }
+    });
+}
+
+function checkAndRegister(nick) {
+    fetch("/api/check-nickname", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: nick })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) {
+            alert(data.error);
+            localStorage.removeItem("portal_nickname");
+            location.reload();
+            return;
+        }
+        localStorage.setItem("portal_role", data.role);
+        if (data.role === "Создатель" || data.role === "Админ") {
+            document.getElementById("admin-panel").style.display = "block";
+            loadAdminPanel();
+            setInterval(loadAdminPanel, 5000);
+        }
+    });
+}
+
+function loadAdminPanel() {
+    fetch("/api/admin/users")
+    .then(res => res.json())
+    .then(data => {
+        const tbody = document.getElementById("admin-users-list");
+        if (!data.users || data.users.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='4' style='padding:10px; text-align:center;'>Нет игроков онлайн</td></tr>";
+            return;
+        }
+        tbody.innerHTML = data.users.map(u => `
+            <tr style="border-bottom:1px solid #21262d;">
+                <td style="padding:8px; font-weight:bold; color:#f0f6fc;">${u.name}</td>
+                <td style="padding:8px; color:#58a6ff;">${u.role}</td>
+                <td style="padding:8px;">${u.isBanned ? "<span style='color:#f85149;'>Забанен</span>" : "<span style='color:#3fb950;'>Активен</span>"}</td>
+                <td style="padding:8px;">
+                    <button onclick="adminAction('${u.name}', 'kick')" style="background:#d29922; color:black; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; margin-right:4px;">Кик</button>
+                    ${u.isBanned ? 
+                        `<button onclick="adminAction('${u.name}', 'unban')" style="background:#238636; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; margin-right:4px;">Разбан</button>` :
+                        `<button onclick="promptBan('${u.name}')" style="background:#f85149; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; margin-right:4px;">Бан</button>`
+                    }
+                    <button onclick="promptRole('${u.name}')" style="background:#1f6feb; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Роль</button>
+                </td>
+            </tr>
+        `).join("");
+    });
+}
+
+function adminAction(target, action, dtype = "", dval = "", role = "") {
+    fetch("/api/admin/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetNick: target, action, durationType: dtype, durationValue: dval, newRole: role })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message || data.error);
+        loadAdminPanel();
+    });
+}
+
+function promptBan(target) {
+    const val = prompt("На сколько банить? (укажи число, например: 30)");
+    if (!val) return;
+    const type = prompt("Тип времени: sec (секунды), min (минуты), hour (часы), day (дни)", "min");
+    if (!type) return;
+    adminAction(target, "ban", type, val);
+}
+
+function promptRole(target) {
+    const role = prompt("Введи новую роль (Создатель, Админ, VIP, Игрок):", "VIP");
+    if (!role) return;
+    adminAction(target, "set-role", "", "", role);
+}
+</script>
+
 </body>
 </html>
 
