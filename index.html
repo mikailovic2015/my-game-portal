@@ -558,10 +558,16 @@ function filterGames() {
 <div id="nickname-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(13,17,23,0.95); z-index:9999; justify-content:center; align-items:center;">
     <div style="background:#161b22; border:1px solid #30363d; padding:25px; border-radius:12px; width:320px; text-align:center;">
         <h3 style="color:#f0f6fc; margin-bottom:10px;">🎮 Вход на портал</h3>
-        <p style="color:#8b949e; font-size:13px; margin-bottom:15px;">Введи свой уникальный никнейм:</p>
+        <p style="color:#8b949e; font-size:13px; margin-bottom:15px;">Введи ник для быстрого доступа:</p>
         <input type="text" id="nickname-input" placeholder="Твой ник..." style="width:100%; padding:10px; background:#0d1117; border:1px solid #30363d; color:white; border-radius:6px; box-sizing:border-box; margin-bottom:10px; outline:none;">
         <div id="nickname-error" style="color:#f85149; font-size:12px; margin-bottom:10px; display:none;"></div>
-        <button onclick="saveNickname()" style="width:100%; padding:10px; background:#238636; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Войти</button>
+        <button onclick="saveNickname()" style="width:100%; padding:10px; background:#238636; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-bottom:12px;">Войти</button>
+        
+        <!-- Ссылки под зеленой кнопкой -->
+        <div style="border-top:1px solid #30363d; padding-top:12px; font-size:13px; display:flex; flex-direction:column; gap:8px;">
+            <a href="login.html" style="color:#58a6ff; text-decoration:none;">Войти в аккаунт</a>
+            <a href="login.html" style="color:#3fb950; text-decoration:none;">Создать аккаунт</a>
+        </div>
     </div>
 </div>
 
