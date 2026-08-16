@@ -710,6 +710,75 @@ function promptRole(target) {
     </div>
 </div>
 
+
+<script>
+async function openClientManagement() {
+    try {
+        const response = await fetch('/api/admin/users');
+        const data = await response.json();
+        if (!data.success) { alert('Ошибка доступа!'); return; }
+
+        let modal = document.getElementById('adminModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'adminModal';
+            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:1000;';
+            document.body.appendChild(modal);
+        }
+
+        let usersHtml = data.users.map(u => \`
+            <div style="background:#1e293b; padding: 10px; margin-bottom: 8px; border-radius: 8px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong>\${u.username}</strong> <br>
+                    <small style="color:#94a3b8;">Гемы: <span id="gems-\${u.username}">\${u.gems}</span></small>
+                </div>
+                <div>
+                    <input type="number" id="input-\${u.username}" value="100" style="width: 70px; padding: 5px; background:#0f172a; border:1px solid #58a6ff; color:white; border-radius:4px;">
+                    <button onclick="grantGems('\${u.username}')" style="background:#3b82f6; color:white; border:none; padding: 6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">💎 Выдать</button>
+                </div>
+            </div>
+        \`).join('');
+
+        modal.innerHTML = \`
+            <div style="background:#0f172a; border:2px solid #58a6ff; padding:20px; border-radius:12px; width:90%; max-width:500px; max-height:80vh; overflow-y:auto;">
+                <h2 style="color:#58a6ff; margin-top:0;">Управление клиентами</h2>
+                <div style="margin-bottom: 15px;">\${usersHtml}</div>
+                <button onclick="document.getElementById('adminModal').remove()" style="background:#ef4444; color:white; border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Закрыть</button>
+            </div>
+        \`;
+    } catch (e) {
+        console.error(e);
+        alert('Не удалось загрузить список клиентов');
+    }
+}
+
+async function grantGems(targetUsername) {
+    const amount = Number(document.getElementById(\`input-\${targetUsername}\`).value);
+    const response = await fetch('/api/admin/update-gems', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminUsername: 'mikail0vic', targetUsername, gemsAmount: amount })
+    });
+    const result = await response.json();
+    if (result.success) {
+        document.getElementById(\`gems-\${targetUsername}\`).innerText = result.newGems;
+        alert(\`Успешно! У игрока \${targetUsername} теперь \${result.newGems} алмазов.\`);
+    } else {
+        alert('Ошибка: ' + result.message);
+    }
+}
+
+// Автоматически находим кнопку управления клиентами и вешаем на нее клик
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('button').forEach(btn => {
+        if (btn.innerText.includes('Управление клиентами')) {
+            btn.addEventListener('click', openClientManagement);
+        }
+    });
+});
+</script>
 </body>
+</html>
+
 </html>
 
