@@ -361,3 +361,104 @@ const PORT = 3000;
 server.listen(PORT, () => {
     console.log(`🚀 Сервер запущен на http://localhost:${PORT}`);
 });
+
+// API ДЛЯ АДМИНКИ И БАНОВ
+
+// --- БАЗА ДАННЫХ ИГРОКОВ И АДМИНКА ---
+const usersDB = {}; // Хранит всех пользователей: { username: { role, bannedUntil, isBanned } }
+const onlineClients = {};
+
+// Проверка при входе (проверяет бан, занятость ника)
+app.post("/api/check-nickname", (req, res) => {
+    const { nickname } = req.body;
+    if (!nickname || nickname.trim().length < 2) {
+        return res.json({ success: false, error: "Ник слишком короткий!" });
+    }
+    const cleanNick = nickname.trim();
+    const lowerNick = cleanNick.toLowerCase();
+
+    // Проверяем бан
+    if (usersDB[lowerNick] && usersDB[lowerNick].isBanned) {
+        const now = Date.now();
+        if (usersDB[lowerNick].bannedUntil > now) {
+            const timeLeft = Math.ceil((usersDB[lowerNick].bannedUntil - now) / 1000);
+            return res.json({ success: false, error: `Ты забанен! Осталось секунд: ${timeLeft}` });
+        } else {
+            // Бан истек
+            usersDB[lowerNick].isBanned = false;
+            usersDB[lowerNick].bannedUntil = 0;
+        }
+    }
+
+    // Если ник уже занят другим игроком
+    if (usersDB[lowerNick] && usersDB[lowerNick].online && usersDB[lowerNick].socketId !== req.ip) {
+        return res.json({ success: false, error: "Этот ник уже занят другим игроком!" });
+    }
+
+// Создаем или обновляем пользователя
+    if (!usersDB[lowerNick]) {
+        usersDB[lowerNick] = {
+            name: cleanNick,
+            role: cleanNick.toLowerCase() === "микаил" ? "Создатель" : "Игрок", // Тебе сразу права Создателя!
+            isBanned: false,
+            bannedUntil: 0
+        };
+    }
+
+    onlineClients[lowerNick] = { name: cleanNick, time: Date.now() };
+    res.json({ success: true, nickname: cleanNick, role: usersDB[lowerNick].role });
+});
+
+// Получить список всех пользователей для админки
+app.get("/api/admin/users", (req, res) => {
+    const allUsers = Object.values(usersDB).map(u => ({
+        name: u.name,
+        role: u.role,
+        isBanned: u.isBanned && u.bannedUntil > Date.now(),
+        bannedUntil: u.bannedUntil
+    }));
+    res.json({ users: allUsers });
+});
+
+// Админ-действия: Бан, Кик, Выдача привилегий
+app.post("/api/admin/action", (req, res) => {
+    const { targetNick, action, durationType, durationValue, newRole } = req.body;
+    const lowerNick = targetNick ? targetNick.toLowerCase() : "";
+
+    if (!usersDB[lowerNick]) {
+        return res.json({ success: false, error: "Игрок не найден!" });
+    }
+
+    if (action === "kick") {
+        delete onlineClients[lowerNick];
+        return res.json({ success: true, message: `Игрок ${targetNick} кикнут!` });
+    }
+
+    if (action === "ban") {
+        let ms = 0;
+        const val = parseInt(durationValue) || 0;
+        if (durationType === "sec") ms = val * 1000;
+        if (durationType === "min") ms = val * 60 * 1000;
+        if (durationType === "hour") ms = val * 60 * 60 * 1000;
+        if (durationType === "day") ms = val * 24 * 60 * 60 * 1000;
+
+        usersDB[lowerNick].isBanned = true;
+        usersDB[lowerNick].bannedUntil = Date.now() + ms;
+        delete onlineClients[lowerNick]; // Сразу выгоняем из онлайн
+        return res.json({ success: true, message: `Игрок ${targetNick} забанен!` });
+    }
+
+    if (action === "unban") {
+        usersDB[lowerNick].isBanned = false;
+        usersDB[lowerNick].bannedUntil = 0;
+        return res.json({ success: true, message: `Игрок ${targetNick} разбанен!` });
+    }
+
+    if (action === "set-role") {
+        usersDB[lowerNick].role = newRole;
+        return res.json({ success: true, message: `Игроку ${targetNick} выдана роль ${newRole}!` });
+    }
+
+    res.json({ success: false, error: "Неизвестное действие" });
+});
+// ----------------------------------------
