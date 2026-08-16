@@ -462,3 +462,48 @@ app.post("/api/admin/action", (req, res) => {
     res.json({ success: false, error: "Неизвестное действие" });
 });
 // ----------------------------------------
+
+// --- АДМИНКА И ТУРНИРЫ ---
+let currentTournament = { name: "Кибертурнир #1", title: "Кибертурнир #1", status: "Регистрация открыта" };
+
+app.get("/api/tournament", (req, res) => {
+    res.json({
+        success: true,
+        name: currentTournament.name,
+        title: currentTournament.name,
+        tournament: currentTournament
+    });
+});
+
+app.post("/api/admin/create-tournament", (req, res) => {
+    const { adminUsername, name } = req.body;
+    if (adminUsername !== "mikail0vic") return res.status(403).json({ success: false, message: "Доступ запрещен" });
+    currentTournament = { name: name, title: name, status: "Регистрация открыта" };
+    res.json({ success: true, tournament: currentTournament });
+});
+
+app.post("/api/admin/update-balance", (req, res) => {
+    const { adminUsername, targetUsername, gems, coins } = req.body;
+    if (adminUsername !== "mikail0vic") return res.status(403).json({ success: false, message: "Доступ запрещен" });
+
+    const fs = require("fs");
+    try {
+        let users = [];
+        if (fs.existsSync("users.json")) {
+            users = JSON.parse(fs.readFileSync("users.json", "utf8"));
+        }
+        let user = users.find(u => u.username === targetUsername);
+        if (!user) {
+            user = { username: targetUsername, gems: 0, coins: 0 };
+            users.push(user);
+        }
+
+        user.gems = (user.gems || 0) + Number(gems);
+        user.coins = (user.coins || 0) + Number(coins);
+        fs.writeFileSync("users.json", JSON.stringify(users, null, 2));
+        res.json({ success: true });
+    } catch(e) {
+        res.status(500).json({ success: false, message: "Ошибка базы данных" });
+    }
+});
+// -------------------------
