@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><title>Пятнашки</title><style>
+body{margin:0;background:#0d1117;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;}
+.grid{display:grid;grid-template-columns:repeat(3,80px);gap:8px;background:#161b22;padding:12px;border:2px solid #30363d;border-radius:12px;}
+.tile{background:#21262d;color:#58a6ff;font-size:24px;font-weight:bold;height:80px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;}
+</style></head><body>
+<h2>🧩 Мини-Пятнашки</h2>
+<div class="grid" id="g"></div>
+<script>
+let nums=[1,2,3,4,5,6,7,8,''];
+function render(){
+    let d=document.getElementById('g'); d.innerHTML='';
+    nums.forEach(n=>{
+        let div=document.createElement('div');
+        div.className='tile'; div.innerText=n;
+        d.appendChild(div);
+    });
+}
+render();
+</script></body></html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><title>Ретро-Понг</title><style>
+body{margin:0;background:#0d1117;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;}
+canvas{background:#161b22;border:2px solid #30363d;border-radius:12px;box-shadow:0 0 20px rgba(88,166,255,0.2);}
+</style></head><body>
+<h2>🕹️ Ретро-Понг</h2>
+<canvas id="pong" width="400" height="250"></canvas>
+<script>
+const cvs=document.getElementById('pong'), ctx=cvs.getContext('2d');
+let bx=200, by=125, dx=3, dy=2, py=100;
+window.onmousemove=(e)=>{ py = e.clientY - 150; if(py<0)py=0; if(py>170)py=170; };
+function loop(){
+    ctx.clearRect(0,0,400,250);
+    bx+=dx; by+=dy;
+    if(by<0 || by>250) dy*=-1;
+    if(bx>390) dx*=-1;
+    if(bx<20 && by>py && by<py+80) dx*=-1;
+    ctx.fillStyle='#58a6ff'; ctx.fillRect(10,py,10,80);
+    ctx.fillStyle='#ffffff'; ctx.fillRect(bx,by,10,10);
+    requestAnimationFrame(loop);
+}
+loop();
+</script></body></html>

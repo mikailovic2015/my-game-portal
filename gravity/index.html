@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Гравити-Прыг</title>
+    <style>
+        body { margin: 0; background: #0d1117; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; overflow: hidden; }
+        canvas { background: #161b22; border: 2px solid #30363d; border-radius: 12px; box-shadow: 0 0 20px rgba(88, 166, 255, 0.2); }
+        h1 { margin: 10px; color: #58a6ff; }
+    </style>
+</head>
+<body>
+    <h1>Гравити-Прыг</h1>
+    <canvas id="gameCanvas" width="350" height="500"></canvas>
+    <p>Нажми на экран или на пробел, чтобы сменить гравитацию!</p>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        let player = { x: 50, y: 250, size: 30, v: 0, gravity: 0.6 };
+        let score = 0;
+
+        function update() {
+            player.v += player.gravity;
+            player.y += player.v;
+            if (player.y > canvas.height - player.size || player.y < 0) {
+                player.y = 250; player.v = 0; score = 0;
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#58a6ff";
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+            ctx.fillStyle = "white";
+            ctx.fillText("Очки: " + Math.floor(score++ / 10), 20, 30);
+            requestAnimationFrame(update);
+        }
+        window.onkeydown = window.ontouchstart = () => player.gravity *= -1;
+        update();
+    </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><title>Тир-Снайпер</title><style>
+body{margin:0;background:#0d1117;color:white;text-align:center;font-family:sans-serif;overflow:hidden;height:100vh;}
+#target{width:50px;height:50px;background:#f85149;border-radius:50%;position:absolute;cursor:pointer;box-shadow:0 0 15px #f85149;}
+</style></head><body>
+<h2>🎯 Снайпер | Счёт: <span id="s">0</span></h2>
+<div id="target" onclick="hit()"></div>
+<script>
+let score=0, t=document.getElementById('target'), sc=document.getElementById('s');
+function move(){
+    t.style.left = Math.random()*(window.innerWidth-80) + 'px';
+    t.style.top = Math.random()*(window.innerHeight-150) + 80 + 'px';
+}
+function hit(){ score++; sc.innerText=score; move(); }
+move(); setInterval(move, 1200);
+</script></body></html>
