@@ -770,6 +770,125 @@ async function grantGems(targetUsername) {
 
 
 </script>
+
+<!-- Модальное окно создания турнира -->
+<div id="tournamentModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:#1e1e2f; padding:20px; border-radius:12px; width:90%; max-width:450px; color:white; max-height:90vh; overflow-y:auto; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+        <h3 style="margin-top:0; color:#f59e0b; text-align:center;">🏆 Создать киберспортивный турнир</h3>
+        
+        <label style="font-size:14px; color:#aaa;">Название турнира:</label>
+        <input type="text" id="tNameInput" value="Киберкубок #1" style="width:100%; padding:10px; margin:5px 0 15px 0; background:#2a2a3d; border:1px solid #444; color:white; border-radius:6px;">
+        
+        <label style="font-size:14px; color:#aaa;">Время проведения:</label>
+        <input type="text" id="tTimeInput" value="Сегодня в 19:00" style="width:100%; padding:10px; margin:5px 0 15px 0; background:#2a2a3d; border:1px solid #444; color:white; border-radius:6px;">
+        
+        <label style="font-size:14px; color:#aaa;">Количество раундов:</label>
+        <input type="number" id="tRoundsInput" value="3" min="1" max="10" style="width:100%; padding:10px; margin:5px 0 15px 0; background:#2a2a3d; border:1px solid #444; color:white; border-radius:6px;">
+        
+        <div style="margin: 10px 0;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; color:#f59e0b; margin-bottom:10px;">
+                <input type="checkbox" id="selectAllGames" onchange="toggleAllGames(this)" style="width:18px; height:18px;"> Выбрать ВСЕ игры портала
+            </label>
+        </div>
+
+        <label style="font-size:14px; color:#aaa;">Выберите любые игры для турнира:</label>
+        <div id="gamesCheckboxesList" style="max-height:150px; overflow-y:auto; background:#2a2a3d; padding:10px; border-radius:6px; margin:5px 0 20px 0; display:flex; flex-direction:column; gap:6px;">
+            <!-- Сюда вставляются игры -->
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <button onclick="submitTournamentForm()" style="flex:1; background:#22c55e; color:white; padding:12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Создать</button>
+            <button onclick="closeTournamentModal()" style="flex:1; background:#ef4444; color:white; padding:12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const allPortalGames = [
+    "Cyberjump", "Clicker", "Drift", "Drill", "Alchemy", 
+    "Hacker", "Hangman", "Matrix", "Memory", "Quiz", 
+    "Roulette", "RPS", "Catcher", "Color Game", "Dice Roller", "Rhythm"
+];
+
+function openTournamentModal() {
+    let currentUser = localStorage.getItem("currentUser") || "mikail0vic";
+    if (currentUser !== "mikail0vic") {
+        alert("Только Создатель (Микаил) может создавать киберспортивные турниры!");
+        return;
+    }
+
+    let listContainer = document.getElementById("gamesCheckboxesList");
+    listContainer.innerHTML = "";
+    allPortalGames.forEach((game) => {
+        listContainer.innerHTML += `
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px;">
+                <input type="checkbox" class="game-checkbox" value="${game}" style="width:16px; height:16px;"> ${game}
+            </label>
+        `;
+    });
+    document.getElementById("tournamentModal").style.display = "flex";
+}
+
+function closeTournamentModal() {
+    document.getElementById("tournamentModal").style.display = "none";
+}
+
+function toggleAllGames(masterCheckbox) {
+    let checkboxes = document.querySelectorAll(".game-checkbox");
+    checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+}
+
+async function submitTournamentForm() {
+    let name = document.getElementById("tNameInput").value;
+    let time = document.getElementById("tTimeInput").value;
+    let rounds = document.getElementById("tRoundsInput").value;
+    
+    let selectedGames = [];
+    document.querySelectorAll(".game-checkbox:checked").forEach(cb => {
+        selectedGames.push(cb.value);
+    });
+
+    if (!name) { alert("Введите название!"); return; }
+    if (selectedGames.length === 0) { alert("Выберите хотя бы одну игру!"); return; }
+
+    let res = await fetch("/api/admin/create-tournament", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+            adminUsername: "mikail0vic", 
+            name: name, 
+            time: time, 
+            rounds: rounds, 
+            games: selectedGames 
+        })
+    });
+    let data = await res.json();
+    if (data.success) {
+        alert("Турнир успешно создан!");
+        location.reload();
+    } else {
+        alert("Ошибка: " + (data.message || "Не удалось создать"));
+    }
+}
+
+// Привязываем к желтой кнопке с точным текстом
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("button").forEach(btn => {
+        if (btn.innerText.includes("Создать киберспортивный турнир")) {
+            // Делаем кнопку желтой
+            btn.style.background = "#f59e0b";
+            btn.style.color = "#000";
+            btn.style.fontWeight = "bold";
+            btn.style.cursor = "pointer";
+            btn.onclick = (e) => {
+                e.preventDefault();
+                openTournamentModal();
+            };
+        }
+    });
+});
+</script>
+
 </body>
 </html>
 
