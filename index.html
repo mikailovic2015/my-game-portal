@@ -768,17 +768,8 @@ async function grantGems(targetUsername) {
     }
 }
 
-// Автоматически находим кнопку управления клиентами и вешаем на нее клик
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('button').forEach(btn => {
-        if (btn.innerText.includes('" onclick="openClientManagement()</button>')) {
-            btn.addEventListener('click', openClientManagement);
-        }
-    });
-});
+
 </script>
 </body>
-</html>
-
 </html>
 
