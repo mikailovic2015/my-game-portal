@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Админ-Панель Создателя</title>
+    <style>
+        body { background: #0f172a; color: #fff; font-family: Arial, sans-serif; padding: 20px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; }
+        input, button { padding: 10px; margin: 5px 0; border-radius: 6px; border: none; font-size: 16px; }
+        input { background: #0f172a; color: white; border: 1px solid #475569; width: 100%; box-sizing: border-box; }
+        button { background: #3b82f6; color: white; font-weight: bold; cursor: pointer; width: 100%; }
+        button:hover { background: #2563eb; }
+        .back { background: #64748b; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <button class="back" onclick="location.href='/'">⬅ Назад на портал</button>
+    <h1>👑 Панель Создателя (Микаил)</h1>
+
+    <div class="card">
+        <h3>🏆 Создать киберспортивный турнир</h3>
+        <input type="text" id="tName" placeholder="Название турнира (например, CS2 Cup #1)">
+        <button onclick="createTournament()">Создать турнир</button>
+    </div>
+
+    <div class="card">
+        <h3>💎 Выдать Гемы / Монеты</h3>
+        <input type="text" id="targetUser" placeholder="Никнейм игрока">
+        <input type="number" id="gemAmount" placeholder="Количество гемов" value="100">
+        <input type="number" id="coinAmount" placeholder="Количество монет" value="1000">
+        <button onclick="giveCurrency()">Выдать ресурсы</button>
+    </div>
+
+    <script>
+        async function createTournament() {
+            let name = document.getElementById("tName").value;
+            if(!name) return alert("Введи название!");
+            let res = await fetch("/api/admin/create-tournament", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ adminUsername: "mikail0vic", name })
+            });
+            let data = await res.json();
+            if(data.success) alert("Турнир успешно создан!");
+            else alert("Ошибка: " + data.message);
+        }
+
+        async function giveCurrency() {
+            let targetUsername = document.getElementById("targetUser").value;
+            let gems = Number(document.getElementById("gemAmount").value);
+            let coins = Number(document.getElementById("coinAmount").value);
+            if(!targetUsername) return alert("Введи ник игрока!");
+
+            let res = await fetch("/api/admin/update-balance", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ adminUsername: "mikail0vic", targetUsername, gems, coins })
+            });
+            let data = await res.json();
+            if(data.success) alert("Успешно выдано!");
+            else alert("Ошибка: " + data.message);
+        }
+    </script>
+</body>
+</html>
