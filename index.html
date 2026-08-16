@@ -152,8 +152,8 @@
         </div>
 
         <button onclick="openDuelModal()" class="challenge-btn">⚔️ Вызвать своего друга на дуэль</button>
-        <button id="admin-users-btn" onclick="openAdminModal()" class="admin-btn">🛡️ Управление клиентами</button>
-        <button id="tourn-create-btn" onclick="openTournamentModal()" class="tourn-create-btn">🏆 Создать киберспортивный турнир</button>
+        <button id="admin-users-btn" onclick="openAdminModal()" class="admin-btn">🛡️ " onclick="openClientManagement()</button></button>
+        <button id="tourn-create-btn" onclick="openTournamentModal()" class="tourn-create-btn">🏆 " onclick="openTournamentCreator()</button>
         <button id="donate-check-btn" onclick="openDonateCheckModal()" class="donate-check-btn">💳 Заявки на донат (Проверка)</button>
     </div>
 
@@ -275,7 +275,7 @@
 
 <!-- Окно дуэли, админки и турниров -->
 <div id="game-modal" class="modal" onclick="closeModal('game-modal', event)"><div class="modal-content" onclick="event.stopPropagation()"><h3 style="color: #f0f6fc;">⚔️ Выбор игры</h3><div id="modal-games-list" style="display: flex; flex-direction: column; gap: 8px;"></div><button onclick="closeModal('game-modal')" style="background: #30363d; color: white; border: none; padding: 8px; border-radius: 8px;">Отмена</button></div></div>
-<div id="admin-modal" class="modal" onclick="closeModal('admin-modal', event)"><div class="modal-content" onclick="event.stopPropagation()"><h3 style="color: #d29922;">🛡️ Управление клиентами</h3><div id="admin-users-list" style="display: flex; flex-direction: column; gap: 8px;"></div><button onclick="closeModal('admin-modal')" style="background: #30363d; color: white; border: none; padding: 8px; border-radius: 8px;">Закрыть</button></div></div>
+<div id="admin-modal" class="modal" onclick="closeModal('admin-modal', event)"><div class="modal-content" onclick="event.stopPropagation()"><h3 style="color: #d29922;">🛡️ " onclick="openClientManagement()</button></h3><div id="admin-users-list" style="display: flex; flex-direction: column; gap: 8px;"></div><button onclick="closeModal('admin-modal')" style="background: #30363d; color: white; border: none; padding: 8px; border-radius: 8px;">Закрыть</button></div></div>
 <div id="tournament-modal" class="modal" onclick="closeModal('tournament-modal', event)"><div class="modal-content" onclick="event.stopPropagation()"><h3 style="color: #58a6ff;">🏆 Создать турнир</h3><input type="text" id="tourn-title-input" class="modal-input" placeholder="Название турнира"><div id="modal-tourn-games-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto;"></div><button onclick="submitCreateTournament()" style="background: #238636; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold;">🚀 Запустить</button><button onclick="closeModal('tournament-modal')" style="background: #30363d; color: white; border: none; padding: 8px; border-radius: 8px;">Отмена</button></div></div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -741,7 +741,7 @@ async function openClientManagement() {
 
         modal.innerHTML = \`
             <div style="background:#0f172a; border:2px solid #58a6ff; padding:20px; border-radius:12px; width:90%; max-width:500px; max-height:80vh; overflow-y:auto;">
-                <h2 style="color:#58a6ff; margin-top:0;">Управление клиентами</h2>
+                <h2 style="color:#58a6ff; margin-top:0;">" onclick="openClientManagement()</button></h2>
                 <div style="margin-bottom: 15px;">\${usersHtml}</div>
                 <button onclick="document.getElementById('adminModal').remove()" style="background:#ef4444; color:white; border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Закрыть</button>
             </div>
@@ -771,7 +771,7 @@ async function grantGems(targetUsername) {
 // Автоматически находим кнопку управления клиентами и вешаем на нее клик
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('button').forEach(btn => {
-        if (btn.innerText.includes('Управление клиентами')) {
+        if (btn.innerText.includes('" onclick="openClientManagement()</button>')) {
             btn.addEventListener('click', openClientManagement);
         }
     });
