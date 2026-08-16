@@ -507,3 +507,48 @@ app.post("/api/admin/update-balance", (req, res) => {
     }
 });
 // -------------------------
+
+
+// --- ПОЛНЫЙ СЕРВЕР ТУРНИРОВ ---
+let currentTournamentFull = {
+    name: "Кибертурнир #1",
+    time: "Сегодня в 19:00",
+    roundDuration: "3 мин",
+    rounds: 3,
+    games: ["Cyberjump", "Clicker"],
+    participants: [],
+    status: "Регистрация открыта"
+};
+
+app.get("/api/tournament", (req, res) => {
+    res.json({
+        success: true,
+        ...currentTournamentFull,
+        title: currentTournamentFull.name
+    });
+});
+
+app.post("/api/admin/create-tournament", (req, res) => {
+    const { adminUsername, name, time, roundDuration, rounds, games } = req.body;
+    if (adminUsername !== "mikail0vic") return res.status(403).json({ success: false, message: "Доступ запрещен" });
+    
+    currentTournamentFull = {
+        name: name || "Кибертурнир",
+        time: time || "Скоро",
+        roundDuration: roundDuration || "3 мин",
+        rounds: rounds || 3,
+        games: games || ["Cyberjump"],
+        participants: [],
+        status: "Регистрация открыта"
+    };
+    res.json({ success: true, tournament: currentTournamentFull });
+});
+
+app.post("/api/tournament/join", (req, res) => {
+    const { username } = req.body;
+    if (!username) return res.status(400).json({ success: false, message: "Нет имени игрока" });
+    if (!currentTournamentFull.participants.includes(username)) {
+        currentTournamentFull.participants.push(username);
+    }
+    res.json({ success: true, participants: currentTournamentFull.participants });
+});
