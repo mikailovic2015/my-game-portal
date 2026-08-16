@@ -552,3 +552,66 @@ app.post("/api/tournament/join", (req, res) => {
     }
     res.json({ success: true, participants: currentTournamentFull.participants });
 });
+
+
+// --- ПАНЕЛЬ УПРАВЛЕНИЯ КЛИЕНТАМИ И ИГРОКАМИ ---
+let registeredUsers = {}; // Хранилище игроков: { username: { coins, diamonds, banned, banReason, kick } }
+
+// Регистрация/обновление игрока при входе
+app.post("/api/user/sync", (req, res) => {
+    const { username } = req.body;
+    if (!username) return res.status(400).json({ success: false });
+    
+    if (!registeredUsers[username]) {
+        registeredUsers[username] = {
+            username: username,
+            coins: 1000,
+            diamonds: 100,
+            banned: false,
+            banUntil: null,
+            kicked: false
+        };
+    }
+    
+    let user = registeredUsers[username];
+    if (user.banned && user.banUntil && Date.now() > user.banUntil) {
+        user.banned = false;
+        user.banUntil = null;
+    }
+
+    res.json({ success: true, user: user });
+});
+
+// Получить список всех клиентов для панели админа
+app.post("/api/admin/get-users", (req, res) => {
+    const { adminUsername } = req.body;
+    if (adminUsername !== "mikail0vic") return res.status(403).json({ success: false, message: "Доступ запрещен" });
+    
+    res.json({ success: true, users: Object.values(registeredUsers) });
+});
+
+// Управление клиентом (валюта, бан, кик)
+app.post("/api/admin/manage-user", (req, res) => {
+    const { adminUsername, targetUser, action, value } = req.body;
+    if (adminUsername !== "mikail0vic") return res.status(403).json({ success: false, message: "Доступ запрещен" });
+    
+    if (!registeredUsers[targetUser]) {
+        return res.status(404).json({ success: false, message: "Игрок не найден" });
+    }
+    
+    let u = registeredUsers[targetUser];
+    
+    if (action === "add_coins") u.coins += Number(value || 0);
+    if (action === "add_diamonds") u.diamonds += Number(value || 0);
+    if (action === "ban") { u.banned = true; u.banUntil = null; }
+    if (action === "temp_ban") { 
+        let minutes = Number(value || 10);
+        u.banned = true; 
+        u.banUntil = Date.now() + minutes * 60 * 1000; 
+    }
+    if (action === "unban") { u.banned = false; u.banUntil = null; }
+    if (action === "kick") { u.kicked = true; }
+    if (action === "game_ban") { u.banned = true; } // Бан из игры
+
+    res.json({ success: true, user: u });
+});

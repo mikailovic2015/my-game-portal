@@ -902,6 +902,139 @@ async function submitTournamentForm() {
 }
 </script>
 
+
+<!-- Модальное окно Управления клиентами -->
+<div id="clientsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(5, 5, 10, 0.85); backdrop-filter: blur(8px); z-index:9999; justify-content:center; align-items:center;">
+    <div style="background: linear-gradient(145deg, #12121e, #1a1a2e); border: 2px solid #a855f7; padding: 25px; border-radius: 16px; width: 95%; max-width: 600px; color: white; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(168, 85, 247, 0.3);">
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; color: #a855f7; font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                🛡️ Управление клиентами портала
+            </h2>
+            <p style="margin: 5px 0 0 0; font-size: 13px; color: #888;">Панель администратора (Создатель)</p>
+        </div>
+
+        <div id="clientsListContainer" style="display: flex; flex-direction: column; gap: 12px; max-height: 50vh; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
+            <!-- Список игроков подгружается динамически -->
+        </div>
+
+        <button onclick="closeClientsModal()" style="width: 100%; background: #ef4444; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px;">Закрыть</button>
+    </div>
+</div>
+
+<script>
+async function openClientsModal() {
+    let currentUser = localStorage.getItem("currentUser") || "mikail0vic";
+    if (currentUser !== "mikail0vic") {
+        alert("Доступ запрещен! Только Создатель может управлять клиентами.");
+        return;
+    }
+
+    let res = await fetch("/api/admin/get-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminUsername: "mikail0vic" })
+    });
+    let data = await res.json();
+    
+    if (data.success) {
+        let container = document.getElementById("clientsListContainer");
+        container.innerHTML = "";
+        
+        if (data.users.length === 0) {
+            container.innerHTML = "<p style='text-align:center; color:#888;'>Пока нет зарегистрированных игроков.</p>";
+        }
+
+        data.users.forEach(u => {
+            container.innerHTML += `
+                <div style="background: #161622; border: 1px solid #2a2a3d; padding: 15px; border-radius: 10px; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: bold; color: #f59e0b; font-size: 16px;">👤 ${u.username}</span>
+                        <span style="font-size: 13px; color: ${u.banned ? '#ef4444' : '#22c55e'};">${u.banned ? '🔴 Забанен' : '🟢 Активен'}</span>
+                    </div>
+                    <div style="font-size: 13px; color: #aaa;">
+                        💰 Монеты: <b>${u.coins}</b> | 💎 Алмазы: <b>${u.diamonds}</b>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px;">
+                        <button onclick="manageUserAction('${u.username}', 'add_coins')" style="background: #eab308; color: #000; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">+ Валюта</button>
+                        <button onclick="manageUserAction('${u.username}', 'temp_ban')" style="background: #f97316; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">⏱ Бан на время</button>
+                        <button onclick="manageUserAction('${u.username}', 'ban')" style="background: #dc2626; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">⛔ Бан</button>
+                        <button onclick="manageUserAction('${u.username}', 'game_ban')" style="background: #991b1b; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">🎮 Бан из игры</button>
+                        <button onclick="manageUserAction('${u.username}', 'kick')" style="background: #ca8a04; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">👢 Кик</button>
+                        <button onclick="manageUserAction('${u.username}', 'unban')" style="background: #16a34a; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">✅ Разбан</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    document.getElementById("clientsModal").style.display = "flex";
+}
+
+function closeClientsModal() {
+    document.getElementById("clientsModal").style.display = "none";
+}
+
+async function manageUserAction(targetUser, action) {
+    let value = 0;
+    if (action === "add_coins") {
+        let amount = prompt("Сколько монеты/алмазов выдать?", "1000");
+        if (!amount) return;
+        value = amount;
+        action = confirm("Нажмите OK для монеты, Отмена для алмазов") ? "add_coins" : "add_diamonds";
+    } else if (action === "temp_ban") {
+        let mins = prompt("Введите длительность бана в минутах:", "10");
+        if (!mins) return;
+        value = mins;
+    }
+
+    let res = await fetch("/api/admin/manage-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminUsername: "mikail0vic", targetUser, action, value })
+    });
+    let data = await res.json();
+    if (data.success) {
+        alert("Действие успешно выполнено!");
+        openClientsModal();
+    } else {
+        alert("Ошибка: " + data.message);
+    }
+}
+
+// Настраиваем фиолетовую кнопку управления клиентами
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("button, div").forEach(el => {
+        let text = el.innerText || "";
+        let isPurple = window.getComputedStyle(el).backgroundColor.includes("168, 85, 247") || el.style.background.includes("purple") || el.style.background.includes("a855f7") || el.innerHTML.includes("🛡️");
+        
+        if (isPurple || (el.tagName === "BUTTON" && (text.includes("Управление") || text.trim() === ""))) {
+            if (el.tagName === "BUTTON" || el.style.cursor === "pointer" || el.onclick) {
+                el.innerText = "🛡️ Управление клиентами";
+                el.style.background = "#a855f7";
+                el.style.color = "white";
+                el.style.fontWeight = "bold";
+                el.style.padding = "12px";
+                el.style.borderRadius = "8px";
+                el.style.border = "none";
+                el.style.cursor = "pointer";
+                el.style.width = "100%";
+                
+                el.onclick = (e) => {
+                    e.preventDefault();
+                    let currentUser = localStorage.getItem("currentUser") || "mikail0vic";
+                    if (currentUser !== "mikail0vic") {
+                        alert("Доступ запрещен! Только Создатель может открывать эту панель.");
+                        return;
+                    }
+                    openClientsModal();
+                };
+            }
+        }
+    });
+});
+</script>
+
 </body>
 </html>
 
