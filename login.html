@@ -70,11 +70,16 @@ function doLogin() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            window.location.href = MAIN_LOCALHOST_URL;
+            localStorage.setItem("currentUser", data.username || data.user || email);
+            window.location.href = "/";
         } else {
             alert(data.error || 'Ошибка входа');
             generateCaptcha();
         }
+    })
+    .catch(err => {
+        alert("Ошибка сети: " + err);
+        generateCaptcha();
     });
 }
 </script>
