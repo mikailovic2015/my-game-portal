@@ -362,7 +362,7 @@ function openDonateModal() { document.getElementById('donate-modal').style.displ
 
 function buyDonatePackage(packageName, diamondsAmount, amountPaid) {
     const confirmMsg = `💳 Для покупки "${packageName}" (${amountPaid}) переведите средства на карту/номер Создателя.\n\nПосле перевода нажмите OK, чтобы отправить заявку на подтверждение.`;
-    if (!confirm(confirmMsg)) return;
+    if (!prompt(confirmMsg)) return;
 
     fetch('/api/donate/request', {
         method: 'POST',
@@ -472,7 +472,7 @@ function changeRole(targetEmail, newRole) {
     fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetEmail, action: 'set_role', newRole }) }).then(res => res.json()).then(d => { alert(d.message || d.error); openAdminModal(); });
 }
 function userAction(targetEmail, action) {
-    if (!confirm('Точно выполнить действие?')) return;
+    if (!prompt('Точно выполнить действие?')) return;
     fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetEmail, action }) }).then(res => res.json()).then(d => { alert(d.message || d.error); openAdminModal(); });
 }
 
@@ -1124,7 +1124,7 @@ async function manageUserAction(targetUser, action) {
         let amount = prompt("Сколько монеты/алмазов выдать?", "1000");
         if (!amount) return;
         value = amount;
-        action = confirm("Нажмите OK для монеты, Отмена для алмазов") ? "add_coins" : "add_diamonds";
+        action = prompt("Нажмите OK для монеты, Отмена для алмазов") ? "add_coins" : "add_diamonds";
     } else if (action === "temp_ban") {
         let mins = prompt("Введите длительность бана в минутах:", "10");
         if (!mins) return;
