@@ -1230,7 +1230,51 @@ async function createTournamentDirect() {
     }
 }
 </script>
+
+
+<script>
+function openTournamentModal() {
+    const modal = document.getElementById("tournament-modal");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeTournamentModal() {
+    const modal = document.getElementById("tournament-modal");
+    if (modal) modal.style.display = "none";
+}
+
+async function submitCreateTournament() {
+    const titleInput = document.getElementById("tourn-title-input");
+    const title = titleInput ? titleInput.value.trim() : "";
+    
+    if (!title) {
+        alert("Введите название турнира!");
+        return;
+    }
+
+    try {
+        let res = await fetch("/api/admin/create-tournament", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                adminUsername: "mikail0vic", 
+                title: title, 
+                name: title, 
+                gameUrl: "#" 
+            })
+        });
+        let d = await res.json();
+        if (d.success) {
+            alert("Турнир успешно создан!");
+            closeTournamentModal();
+            location.reload();
+        } else {
+            alert("Ошибка: " + (d.message || d.error || "Неизвестно"));
+        }
+    } catch (err) {
+        alert("Ошибка сети: " + err);
+    }
+}
+</script>
+
 </body>
-
-</html>
-
