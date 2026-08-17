@@ -505,17 +505,48 @@ function submitCreateTournament() {
 function openDuelModal() {
     try {
         const list = document.getElementById('modal-games-list');
+        
+        // Рендерим расширенную форму настройки дуэли
         list.innerHTML = `
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; color: #aaa; font-size: 14px;">Ник друга для дуэли:</label>
-                <input type="text" id="duel-friend-nick" class="cyber-input" placeholder="Введите ник..." style="width: 100%; padding: 10px; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid #00f3ff; color: white; border-radius: 5px;">
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; margin-bottom: 4px; color: #aaa; font-size: 13px;">Ник друга для дуэли:</label>
+                <input type="text" id="duel-friend-nick" class="cyber-input" placeholder="Введите ник..." style="width: 100%; padding: 8px; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid #00f3ff; color: white; border-radius: 5px;">
             </div>
-            <div style="font-size: 14px; margin-bottom: 10px; color: #00f3ff;">Выберите игру:</div>
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; margin-bottom: 4px; color: #aaa; font-size: 13px;">Название матча:</label>
+                <input type="text" id="duel-title" class="cyber-input" placeholder="Например: Битва за кибер-трон" value="Эпическая дуэль" style="width: 100%; padding: 8px; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid #00f3ff; color: white; border-radius: 5px;">
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; margin-bottom: 4px; color: #aaa; font-size: 13px;">Описание:</label>
+                <input type="text" id="duel-desc" class="cyber-input" placeholder="Правила или описание..." value="Кто победит, тот и пахан" style="width: 100%; padding: 8px; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid #00f3ff; color: white; border-radius: 5px;">
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; color: #aaa; font-size: 13px;">Раундов:</label>
+                    <select id="duel-rounds" class="cyber-input" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid #00f3ff; color: white; border-radius: 5px;">
+                        <option value="1">1 раунд</option>
+                        <option value="3" selected>3 раунда</option>
+                        <option value="5">5 раундов</option>
+                        <option value="10">10 раундов</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; color: #aaa; font-size: 13px;">Время раунда:</label>
+                    <select id="duel-time" class="cyber-input" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid #00f3ff; color: white; border-radius: 5px;">
+                        <option value="30">30 секунд</option>
+                        <option value="60" selected>1 минута</option>
+                        <option value="180">3 минуты</option>
+                        <option value="300">5 минут</option>
+                        <option value="600">10 минут</option>
+                    </select>
+                </div>
+            </div>
+            <div style="font-size: 14px; margin: 10px 0 6px 0; color: #00f3ff; font-weight: bold;">Выберите игру для вызова:</div>
         `;
         
         const cards = document.querySelectorAll('.game-card');
         if (cards.length === 0) {
-            alert('Ошибка: карточки игр (.game-card) не найдены на странице!');
+            alert('Ошибка: карточки игр не найдены!');
         }
 
         cards.forEach(card => {
@@ -525,7 +556,7 @@ function openDuelModal() {
             
             const item = document.createElement('div');
             item.className = 'modal-item';
-            item.style.cssText = "cursor: pointer; padding: 12px; background: rgba(255,255,255,0.1); margin-bottom: 8px; border-radius: 8px; border: 1px solid rgba(0,243,255,0.3); color: white;";
+            item.style.cssText = "cursor: pointer; padding: 10px; background: rgba(255,255,255,0.08); margin-bottom: 6px; border-radius: 6px; border: 1px solid rgba(0,243,255,0.2); color: white; transition: 0.2s;";
             item.innerHTML = `<span>🎮 ${title}</span>`;
             
             item.onclick = () => {
@@ -537,16 +568,33 @@ function openDuelModal() {
                         if(nickInput) nickInput.focus();
                         return;
                     }
+                    
+                    const duelTitle = document.getElementById('duel-title').value;
+                    const duelDesc = document.getElementById('duel-desc').value;
+                    const rounds = document.getElementById('duel-rounds').value;
+                    const roundTime = document.getElementById('duel-time').value;
+
                     window.targetFriend = friendNick;
+                    
                     if (typeof socket === 'undefined') {
-                        alert('Ошибка: сокет (socket) не определен!');
+                        alert('Ошибка: сокет не подключен!');
                         return;
                     }
-                    socket.emit('send_challenge', { targetUser: window.targetFriend, gameUrl: href, gameTitle: title });
-                    alert('Вызов отправлен!');
+
+                    socket.emit('send_challenge', { 
+                        targetUser: window.targetFriend, 
+                        gameUrl: href, 
+                        gameTitle: title,
+                        title: duelTitle,
+                        description: duelDesc,
+                        rounds: rounds,
+                        roundTime: roundTime
+                    });
+
+                    alert('Вызов "${duelTitle}" отправлен!');
                     document.getElementById('game-modal').style.display = 'none';
                 } catch (err) {
-                    alert('Ошибка клика: ' + err.message);
+                    alert('Ошибка отправки: ' + err.message);
                 }
             };
             
