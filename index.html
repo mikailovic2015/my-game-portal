@@ -445,7 +445,7 @@ function loadLeaderboard() {
 }
 loadLeaderboard();
 
-socket.on('new_tournament_announced', (tourn) => { alert(`🏆 Создатель объявил турнир: "${tourn.title}"!`); loadTournament(); });
+socket.on('new_tournament_announced', (tourn) => { alert(`🏆 Создатель объявил турнир: "${tourn.title}"!`); loadTournament(); }).catch(err => { console.error("Ошибка fetch:", err); alert("Ошибка: " + err); });
 socket.on('force_logout', (msg) => { alert(msg); fetch('/api/logout').then(() => location.reload()); });
 socket.on('role_updated', (msg) => { alert(msg); location.reload(); });
 
@@ -496,10 +496,10 @@ function openTournamentModal() {
     document.getElementById('tournament-modal').style.display = 'flex';
 }
 
-function submitCreateTournament() {
+function submitCreateTournament() { console.log("Кнопка нажата, пошел fetch");
     const title = document.getElementById('tourn-title-input').value.trim();
     if (!title || !selectedTournGameUrl) { alert('Заполните название и выберите игру!'); return; }
-    fetch('/api/admin/create-tournament', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, gameUrl: selectedTournGameUrl }) }).then(res => res.json()).then(d => { alert(d.message); document.getElementById('tournament-modal').style.display = 'none'; loadTournament(); });
+    fetch('/api/admin/create-tournament', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, gameUrl: selectedTournGameUrl }) }).then(res => res.json()).then(d => { console.log("Ответ сервера:", d); alert(d.message); document.getElementById('tournament-modal').style.display = 'none'; loadTournament(); }).catch(err => { console.error("Ошибка fetch:", err); alert("Ошибка: " + err); });
 }
 
 function openDuelModal() {
