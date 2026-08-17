@@ -540,8 +540,6 @@ function openDuelModal() {
     document.getElementById('game-modal').style.display = 'flex';
 }
 
-socket.on('receive_challenge', (data) => { if (confirm(`⚡ Вызов на дуэль в игру "${data.gameTitle}"! Принять?`)) location.href = data.gameUrl; });
-socket.on('error_msg', (msg) => alert(msg));
 function filterGames() {
     const q = document.getElementById('search').value.toLowerCase().trim();
     document.querySelectorAll('.game-card').forEach(c => c.style.display = c.getAttribute('data-name').toLowerCase().includes(q) ? 'flex' : 'none');
