@@ -20,7 +20,7 @@
         <h2>🔑 Вход</h2>
         <input type="email" id="login-email" placeholder="Gmail">
         <input type="password" id="login-pass" placeholder="Пароль">
-        
+
         <div class="captcha-box">
             <span id="captcha-question">Загрузка рекапчи...</span>
             <input type="number" id="captcha-answer" placeholder="Ответ">
@@ -42,8 +42,6 @@ function generateCaptcha() {
     document.getElementById('captcha-question').innerText = `🛡️ Рекапча: сколько будет ${num1} + ${num2}?`;
 }
 generateCaptcha();
-
-const MAIN_LOCALHOST_URL = window.location.origin;
 
 function doLogin() {
     const email = document.getElementById('login-email').value.trim();
@@ -70,8 +68,8 @@ function doLogin() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            const uname = data.username || (data.user && (data.user.username || data.user.email)) || email;
-            localStorage.setItem("currentUser", uname);
+            const usernameToSave = (data.user && data.user.username) || data.username || email;
+            localStorage.setItem("currentUser", usernameToSave);
             window.location.href = "/";
         } else {
             alert(data.error || 'Ошибка входа');
@@ -79,7 +77,7 @@ function doLogin() {
         }
     })
     .catch(err => {
-        alert("Ошибка сети: " + err);
+        alert("Ошибка сети при входе: " + err);
         generateCaptcha();
     });
 }
