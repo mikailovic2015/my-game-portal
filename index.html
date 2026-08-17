@@ -507,7 +507,7 @@ function openDuelModal() {
     list.innerHTML = `
         <div style="margin-bottom: 15px;">
             <label style="display: block; margin-bottom: 5px; color: #aaa; font-size: 14px;">Ник друга для дуэли:</label>
-            <input type="text" id="duel-friend-nick" class="cyber-input" placeholder="Введите ник..." style="width: 100%; box-sizing: border-box;">
+            <input type="text" id="duel-friend-nick" class="cyber-input" placeholder="Введите ник..." style="width: 100%; padding: 10px; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid #00f3ff; color: white; border-radius: 5px;">
         </div>
         <div style="font-size: 14px; margin-bottom: 10px; color: #00f3ff;">Выберите игру:</div>
     `;
@@ -517,25 +517,19 @@ function openDuelModal() {
         const title = card.querySelector('.game-title').innerText;
         const item = document.createElement('div');
         item.className = 'modal-item';
-        item.style.cursor = 'pointer';
-        item.style.padding = '10px';
-        item.style.background = 'rgba(255,255,255,0.05)';
-        item.style.marginBottom = '8px';
-        item.style.borderRadius = '8px';
+        item.style.cssText = "cursor: pointer; padding: 12px; background: rgba(255,255,255,0.1); margin-bottom: 8px; border-radius: 8px; border: 1px solid rgba(0,243,255,0.3);";
         item.innerHTML = `<span>🎮 ${title}</span>`;
-        item.onclick = () => {
-            const nickInput = document.getElementById('duel-friend-nick');
-            const friendNick = nickInput ? nickInput.value.trim() : '';
-            if (!friendNick) {
-                alert('Сначала введите ник друга!');
-                nickInput.focus();
-                return;
-            }
+        
+        // Прямое навешивание события
+        item.addEventListener('click', (e) => {
+            const friendNick = document.getElementById('duel-friend-nick').value.trim();
+            if (!friendNick) { alert('Введите ник друга!'); return; }
             window.targetFriend = friendNick;
             socket.emit('send_challenge', { targetUser: window.targetFriend, gameUrl: href, gameTitle: title });
             alert('Вызов отправлен!');
             document.getElementById('game-modal').style.display = 'none';
-        };
+        });
+        
         list.appendChild(item);
     });
     document.getElementById('game-modal').style.display = 'flex';
