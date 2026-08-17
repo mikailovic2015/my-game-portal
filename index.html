@@ -191,7 +191,7 @@
 
         <button onclick="openDuelModal()" class="challenge-btn">⚔️ Вызвать своего друга на дуэль</button>
         <button id="admin-users-btn" onclick="openAdminModal()" class="admin-btn">🛡️</button></button>
-        <button id="tourn-create-btn" onclick="openTournamentModal()" class="tourn-create-btn">🏆</button>
+        <button id="tourn-create-btn" onclick="createTournamentDirect()" class="tourn-create-btn">🏆</button>
         <button id="donate-check-btn" onclick="openDonateCheckModal()" class="donate-check-btn">💳 Заявки на донат (Проверка)</button>
     </div>
 
@@ -1210,6 +1210,27 @@ document.addEventListener("click", function(e) {
 });
 </script>
 
+
+<script>
+async function createTournamentDirect() {
+    const title = prompt("Введите название киберспортивного турнира:", "Турнир #1");
+    if (!title) return;
+    
+    try {
+        let res = await fetch("/api/admin/create-tournament", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: title, name: title, gameUrl: "#" })
+        });
+        let data = await res.json();
+        alert(data.message || "Турнир создан!");
+        location.reload();
+    } catch (e) {
+        alert("Ошибка сети при создании турнира");
+    }
+}
+</script>
 </body>
+
 </html>
 
