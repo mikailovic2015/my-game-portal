@@ -457,5 +457,25 @@ async function submitCreateTournament() {
     }
 }
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const currentUser = localStorage.getItem("currentUser");
+    if (currentUser) {
+        // Скрываем плашку с призывом войти
+        document.querySelectorAll("div, section").forEach(el => {
+            if (el.innerText && el.innerText.includes("Чтобы играть в сети")) {
+                el.style.display = "none";
+            }
+        });
+
+        // Скрываем кнопки «Войти» и «Регистрация» в шапке
+        document.querySelectorAll("a, button").forEach(el => {
+            if (el.innerText.includes("Войти") || el.innerText.includes("Регистрация")) {
+                el.style.display = "none";
+            }
+        });
+    }
+});
+</script>
 
 </body>
