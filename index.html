@@ -988,15 +988,37 @@ function toggleAllGames(masterCheckbox) {
 }
 
 async function submitTournamentForm() {
-    let name = document.getElementById("tNameInput").value;
-    let time = document.getElementById("tTimeInput").value;
-    let roundDuration = document.getElementById("tRoundDuration").value;
-    let rounds = document.getElementById("tRoundsInput").value;
+    const titleInput = document.getElementById("tourn-title") || document.getElementById("tournament-title") || document.querySelector("input[type='text']");
+    // Если на форме есть конкретные инпуты, ищем их по порядку или классам
+    const titleField = document.getElementById("tourn-title") || document.querySelector(".modal-content input") || document.querySelector("input");
     
-    let selectedGames = [];
-    document.querySelectorAll(".game-checkbox:checked").forEach(cb => {
-        selectedGames.push(cb.value);
+    // Ищем точное поле названия турнира в модалке
+    let nameVal = "";
+    const allInputs = document.querySelectorAll("#tournament-modal input, .modal input");
+    for(let inp of allInputs) {
+        if(inp.value && inp.value.trim() !== "" && inp.type === "text") {
+            nameVal = inp.value.trim();
+            break;
+        }
+    }
+    
+    if (!nameVal) {
+        nameVal = "Кибертурнир #1";
+    }
+
+    const duration = document.getElementById("tourn-duration") ? document.getElementById("tourn-duration").value : "3";
+    const rounds = document.getElementById("tourn-rounds") ? document.getElementById("tourn-rounds").value : "3";
+
+    socket.emit("create_tournament", {
+        title: nameVal,
+        name: nameVal,
+        duration: duration,
+        rounds: rounds
     });
+
+    alert("Турнир "" + nameVal + "" успешно создан!");
+    closeModal("tournament-modal");
+});
 
     if (!name) { alert("Введите название турнира!"); return; }
     if (selectedGames.length === 0) { alert("Выберите хотя бы одну игру!"); return; }
