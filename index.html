@@ -165,7 +165,7 @@
 
     <!-- БЛОК АВТОРИЗАЦИИ -->
     <div id="auth-unlogged-panel" class="auth-portal-card">
-        <p>Чтобы играть по сети, копить алмазы и донатить, войди в аккаунт:</p>
+        <p><span id="auth-banner">Чтобы играть по сети, копить алмазы и донатить, войди в аккаунт:</p>
         <div class="auth-buttons-row">
             <a href="/login.html" class="btn-link-login">🔑 Войти</a>
             <a href="/register.html" class="btn-link-reg">📝 Регистрация</a>
@@ -470,4 +470,13 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    if (localStorage.getItem("currentUser")) {
+        const banner = document.getElementById("auth-banner");
+        if (banner) banner.style.display = "none";
+    }
+});
+</script>
 </body>
