@@ -502,19 +502,39 @@ function submitCreateTournament() {
 }
 
 function openDuelModal() {
-    const friendNick = prompt("Ник друга для дуэли:");
-    if (!friendNick) return;
-    window.targetFriend = friendNick;
     const list = document.getElementById('modal-games-list');
-    list.innerHTML = '';
+    list.innerHTML = `
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; color: #aaa; font-size: 14px;">Ник друга для дуэли:</label>
+            <input type="text" id="duel-friend-nick" class="cyber-input" placeholder="Введите ник..." style="width: 100%; box-sizing: border-box;">
+        </div>
+        <div style="font-size: 14px; margin-bottom: 10px; color: #00f3ff;">Выберите игру:</div>
+    `;
+    
     document.querySelectorAll('.game-card').forEach(card => {
         const href = card.getAttribute('href');
         const title = card.querySelector('.game-title').innerText;
         const item = document.createElement('div');
         item.className = 'modal-item';
         item.style.cursor = 'pointer';
-        item.innerHTML = `<span>${title}</span>`;
-        item.onclick = () => { socket.emit('send_challenge', { targetUser: window.targetFriend, gameUrl: href, gameTitle: title }); alert('Вызов отправлен!'); document.getElementById('game-modal').style.display = 'none'; };
+        item.style.padding = '10px';
+        item.style.background = 'rgba(255,255,255,0.05)';
+        item.style.marginBottom = '8px';
+        item.style.borderRadius = '8px';
+        item.innerHTML = `<span>🎮 ${title}</span>`;
+        item.onclick = () => {
+            const nickInput = document.getElementById('duel-friend-nick');
+            const friendNick = nickInput ? nickInput.value.trim() : '';
+            if (!friendNick) {
+                alert('Сначала введите ник друга!');
+                nickInput.focus();
+                return;
+            }
+            window.targetFriend = friendNick;
+            socket.emit('send_challenge', { targetUser: window.targetFriend, gameUrl: href, gameTitle: title });
+            alert('Вызов отправлен!');
+            document.getElementById('game-modal').style.display = 'none';
+        };
         list.appendChild(item);
     });
     document.getElementById('game-modal').style.display = 'flex';
