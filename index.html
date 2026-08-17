@@ -314,923 +314,86 @@
 <!-- Окно дуэли, админки и турниров -->
 <div id="game-modal" class="modal" onclick="closeModal('game-modal', event)"><div class="modal-content" onclick="event.stopPropagation()"><h3 style="color: #f0f6fc;">⚔️ Выбор игры</h3><div id="modal-games-list" style="display: flex; flex-direction: column; gap: 8px;"></div><button onclick="closeModal('game-modal')" style="background: #30363d; color: white; border: none; padding: 8px; border-radius: 8px;">Отмена</button></div></div>
 <div id="admin-modal" class="modal" onclick="closeModal('admin-modal', event)"><div class="modal-content" onclick="event.stopPropagation()"><h3 style="color: #d29922;">🛡️</button></h3><div id="admin-users-list" style="display: flex; flex-direction: column; gap: 8px;"></div><button onclick="closeModal('admin-modal')" style="background: #30363d; color: white; border: none; padding: 8px; border-radius: 8px;">Закрыть</button></div></div>
-<div id="tournament-modal" class="modal" onclick="closeModal('tournament-modal', event)"><div class="modal-content" onclick="event.stopPropagation()"><h3 style="color: #58a6ff;">🏆 Создать турнир</h3><input type="text" id="tourn-title-input" class="modal-input" placeholder="Название турнира"><div id="modal-tourn-games-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto;"></div><button onclick="submitCreateTournament()" style="background: #238636; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold;">🚀 Запустить</button><button onclick="closeModal('tournament-modal')" style="background: #30363d; color: white; border: none; padding: 8px; border-radius: 8px;">Отмена</button></div></div>
 
-<script src="/socket.io/socket.io.js"></script>
 
-<script>
-const socket = io();
-let sessionUser = null;
-let selectedTournGameUrl = '';
-
-function getBadgeHtml(role) {
-    switch(role) {
-        case 'owner': return '<span class="badge badge-owner">👑 Создатель</span>';
-        case 'admin': return '<span class="badge badge-admin">🛡️ Админ</span>';
-        case 'moderator': return '<span class="badge badge-moderator">⭐ Модер</span>';
-        case 'esports': return '<span class="badge badge-esports">⚡ Киберспортсмен</span>';
-        case 'vip': return '<span class="badge badge-vip">💎 VIP</span>';
-        default: return '<span class="badge badge-player">🕹️ Игрок</span>';
-    }
-}
-
-fetch('/api/me').then(res => res.json()).then(data => {
-    if (data.user) {
-        sessionUser = data.user;
-        document.getElementById('auth-unlogged-panel').style.display = 'none';
-        document.getElementById('logged-panel').style.display = 'flex';
-        document.getElementById('user-display-name').innerText = sessionUser.username;
-        document.getElementById('role-badge-container').innerHTML = getBadgeHtml(sessionUser.role);
-        document.getElementById('user-coins').innerText = sessionUser.coins;
-        document.getElementById('user-diamonds').innerText = sessionUser.diamonds;
-        socket.emit('register_user', sessionUser.username);
-
-        if (sessionUser.role === 'owner' || sessionUser.role === 'admin') {
-            document.getElementById('admin-users-btn').style.display = 'block';
-        }
-        if (sessionUser.role === 'owner') {
-            document.getElementById('tourn-create-btn').style.display = 'block';
-            document.getElementById('donate-check-btn').style.display = 'block';
-        }
-    }
-});
-
-socket.on('donation_approved', (msg) => { alert(msg); location.reload(); });
-socket.on('donation_rejected', (msg) => { alert(msg); });
-
-function openDonateModal() { document.getElementById('donate-modal').style.display = 'flex'; }
-
-function buyDonatePackage(packageName, diamondsAmount, amountPaid) {
-    const confirmMsg = `💳 Для покупки "${packageName}" (${amountPaid}) переведите средства на карту/номер Создателя.\n\nПосле перевода нажмите OK, чтобы отправить заявку на подтверждение.`;
-    if (!prompt(confirmMsg)) return;
-
-    fetch('/api/donate/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packageName, diamondsAmount, amountPaid })
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert(data.message);
-        document.getElementById('donate-modal').style.display = 'none';
-    });
-}
-
-function openDonateCheckModal() {
-    fetch('/api/admin/donate-requests')
-    .then(res => res.json())
-    .then(requests => {
-        const list = document.getElementById('admin-donate-requests-list');
-        list.innerHTML = '';
-        const pending = requests.filter(r => r.status === 'pending');
-        if (pending.length === 0) {
-            list.innerHTML = '<span style="font-size: 12px; color: #8b949e;">Нет новых заявок на донат.</span>';
-            document.getElementById('donate-check-modal').style.display = 'flex';
-            return;
-        }
-        pending.forEach(r => {
-            const item = document.createElement('div');
-            item.className = 'modal-item';
-            item.innerHTML = `
-                <div>
-                    <b>${r.username}</b> хочет купить 💎<b>${r.diamondsAmount}</b> (${r.packageName})<br>
-                    <span style="font-size: 11px; color: #8b949e;">Сумма: ${r.amountPaid} | ${r.date}</span>
-                </div>
-                <div class="user-actions">
-                    <button class="btn-buy-pkg" onclick="donateAction('${r.id}', 'approve')">Одобрить</button>
-                    <button class="btn-ban" onclick="donateAction('${r.id}', 'reject')">Отклонить</button>
-                </div>
-            `;
-            list.appendChild(item);
-        });
-        document.getElementById('donate-check-modal').style.display = 'flex';
-    });
-}
-
-function donateAction(requestId, action) {
-    fetch('/api/admin/donate-action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requestId, action })
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert(data.message);
-        openDonateCheckModal();
-    });
-}
-
-// Загрузка турнира и лидерборда
-function loadTournament() {
-    fetch('/api/tournament').then(res => res.json()).then(tourn => {
-        const container = document.getElementById('tournament-banner-container');
-        if (!tourn) { container.innerHTML = ''; return; }
-        container.innerHTML = `<div class="tournament-banner"><h3>🏆 ТУРНИР: ${tourn.title}</h3><p>${tourn.description}</p><a href="${tourn.gameUrl}" class="btn-join-tourn">🎮 Участвовать</a></div>`;
-    });
-}
-loadTournament();
-
-function loadLeaderboard() {
-    fetch('/api/leaderboard').then(res => res.json()).then(board => {
-        const list = document.getElementById('leaderboard-list');
-        list.innerHTML = '';
-        if (board.length === 0) { list.innerHTML = '<span style="font-size: 12px; color: #8b949e;">Пока нет рекордов.</span>'; return; }
-        board.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = 'leaderboard-item';
-            div.innerHTML = `<span><b>#${index + 1}</b> ${item.username} (${item.gameTitle})</span> <span style="color: #3fb950; font-weight: bold;">${item.score} очков</span>`;
-            list.appendChild(div);
-        });
-    });
-}
-loadLeaderboard();
-
-socket.on('new_tournament_announced', (tourn) => { alert(`🏆 Создатель объявил турнир: "${tourn.title}"!`); loadTournament(); }).catch(err => { console.error("Ошибка fetch:", err); alert("Ошибка: " + err); });
-socket.on('force_logout', (msg) => { alert(msg); fetch('/api/logout').then(() => location.reload()); });
-socket.on('role_updated', (msg) => { alert(msg); location.reload(); });
-
-function portalLogout() { fetch('/api/logout').then(() => location.reload()); }
-function closeModal(modalId, e) { if (!e || e.target.id === modalId) document.getElementById(modalId).style.display = 'none'; }
-
-function openAdminModal() {
-    fetch('/api/admin/users').then(res => res.json()).then(users => {
-        const list = document.getElementById('admin-users-list');
-        list.innerHTML = '';
-        users.forEach(u => {
-            if (u.email === 'mikailaskerov1989@gmail.com') return;
-            const role = u.role || 'player';
-            const item = document.createElement('div');
-            item.className = 'modal-item';
-            item.innerHTML = `<div><b>${u.username}</b> ${getBadgeHtml(role)}</div><div class="user-actions"><select class="role-select" onchange="changeRole('${u.email}', this.value)"><option value="player" ${role==='player'?'selected':''}>Игрок</option><option value="esports" ${role==='esports'?'selected':''}>Кибер</option><option value="vip" ${role==='vip'?'selected':''}>VIP</option><option value="moderator" ${role==='moderator'?'selected':''}>Модер</option><option value="admin" ${role==='admin'?'selected':''}>Админ</option></select><button class="btn-kick" onclick="userAction('${u.email}', 'kick')">Кик</button><button class="btn-ban" onclick="userAction('${u.email}', 'ban')">Бан</button></div>`;
-            list.appendChild(item);
-        });
-        document.getElementById('admin-modal').style.display = 'flex';
-    });
-}
-
-function changeRole(targetEmail, newRole) {
-    fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetEmail, action: 'set_role', newRole }) }).then(res => res.json()).then(d => { alert(d.message || d.error); openAdminModal(); });
-}
-function userAction(targetEmail, action) {
-    if (!prompt('Точно выполнить действие?')) return;
-    fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetEmail, action }) }).then(res => res.json()).then(d => { alert(d.message || d.error); openAdminModal(); });
-}
-
-function openTournamentModal() {
-    const list = document.getElementById('modal-tourn-games-list');
-    list.innerHTML = ''; selectedTournGameUrl = '';
-    document.querySelectorAll('.game-card').forEach(card => {
-        const href = card.getAttribute('href');
-        const title = card.querySelector('.game-title').innerText;
-        const item = document.createElement('div');
-        item.className = 'modal-item';
-        item.style.cursor = 'pointer';
-        item.innerHTML = `<span>${title}</span>`;
-        item.onclick = () => {
-            document.querySelectorAll('#modal-tourn-games-list .modal-item').forEach(el => el.style.borderColor = '#30363d');
-            item.style.borderColor = '#238636';
-            selectedTournGameUrl = href;
-        };
-        list.appendChild(item);
-    });
-    document.getElementById('tournament-modal').style.display = 'flex';
-}
-
-function submitCreateTournament() { console.log("Кнопка нажата, пошел fetch");
-    const title = document.getElementById('tourn-title-input').value.trim();
-    if (!title || !selectedTournGameUrl) { alert('Заполните название и выберите игру!'); return; }
-    fetch('/api/admin/create-tournament', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, gameUrl: selectedTournGameUrl }) }).then(res => res.json()).then(d => { console.log("Ответ сервера:", d); alert(d.message); document.getElementById('tournament-modal').style.display = 'none'; loadTournament(); }).catch(err => { console.error("Ошибка fetch:", err); alert("Ошибка: " + err); });
-}
-
-function openDuelModal() {
-    try {
-        const list = document.getElementById('modal-games-list');
+<div id="tournament-modal" class="modal" onclick="closeModal('tournament-modal', event)" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center;">
+    <div class="modal-content" onclick="event.stopPropagation()" style="background: linear-gradient(145deg, #161b22, #0d1117); border: 2px solid #58a6ff; box-shadow: 0 10px 40px rgba(88, 166, 255, 0.3); border-radius: 16px; padding: 24px; color: white; width: 92%; max-width: 460px; max-height: 88vh; overflow-y: auto;">
+        <h3 style="color: #58a6ff; margin-top: 0; text-align: center; font-size: 20px;">🏆 Создать кибертурнир</h3>
         
-        // Рендерим расширенную форму настройки дуэли
-        list.innerHTML = `
-            <div style="margin-bottom: 12px;">
-                <label style="display: block; margin-bottom: 4px; color: #aaa; font-size: 13px;">Ник друга для дуэли:</label>
-                <input type="text" id="duel-friend-nick" class="cyber-input" placeholder="Введите ник..." style="width: 100%; padding: 8px; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid #00f3ff; color: white; border-radius: 5px;">
-            </div>
-            <div style="margin-bottom: 12px;">
-                <label style="display: block; margin-bottom: 4px; color: #aaa; font-size: 13px;">Название матча:</label>
-                <input type="text" id="duel-title" class="cyber-input" placeholder="Например: Битва за кибер-трон" value="Эпическая дуэль" style="width: 100%; padding: 8px; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid #00f3ff; color: white; border-radius: 5px;">
-            </div>
-            <div style="margin-bottom: 12px;">
-                <label style="display: block; margin-bottom: 4px; color: #aaa; font-size: 13px;">Описание:</label>
-                <input type="text" id="duel-desc" class="cyber-input" placeholder="Правила или описание..." value="Кто победит, тот и пахан" style="width: 100%; padding: 8px; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid #00f3ff; color: white; border-radius: 5px;">
-            </div>
-            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                <div style="flex: 1;">
-                    <label style="display: block; margin-bottom: 4px; color: #aaa; font-size: 13px;">Раундов:</label>
-                    <select id="duel-rounds" class="cyber-input" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid #00f3ff; color: white; border-radius: 5px;">
-                        <option value="1">1 раунд</option>
-                        <option value="3" selected>3 раунда</option>
-                        <option value="5">5 раундов</option>
-                        <option value="10">10 раундов</option>
-                    </select>
-                </div>
-                <div style="flex: 1;">
-                    <label style="display: block; margin-bottom: 4px; color: #aaa; font-size: 13px;">Время раунда:</label>
-                    <select id="duel-time" class="cyber-input" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid #00f3ff; color: white; border-radius: 5px;">
-                        <option value="30">30 секунд</option>
-                        <option value="60" selected>1 минута</option>
-                        <option value="180">3 минуты</option>
-                        <option value="300">5 минут</option>
-                        <option value="600">10 минут</option>
-                    </select>
-                </div>
-            </div>
-            <div style="font-size: 14px; margin: 10px 0 6px 0; color: #00f3ff; font-weight: bold;">Выберите игру для вызова:</div>
-        `;
+        <label style="font-size: 13px; color: #8b949e; display: block; margin-top: 12px;">Название турнира:</label>
+        <input type="text" id="tourn-title-input" class="modal-input" placeholder="Например: Битва за топ-1" style="width: 100%; padding: 10px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: white; margin-top: 4px; box-sizing: border-box; font-size: 14px;">
         
-        const cards = document.querySelectorAll('.game-card');
-        if (cards.length === 0) {
-            alert('Ошибка: карточки игр не найдены!');
-        }
-
-        cards.forEach(card => {
-            const href = card.getAttribute('href');
-            const titleEl = card.querySelector('.game-title');
-            const title = titleEl ? titleEl.innerText : 'Игра';
-            
-            const item = document.createElement('div');
-            item.className = 'modal-item';
-            item.style.cssText = "cursor: pointer; padding: 10px; background: rgba(255,255,255,0.08); margin-bottom: 6px; border-radius: 6px; border: 1px solid rgba(0,243,255,0.2); color: white; transition: 0.2s;";
-            item.innerHTML = `<span>🎮 ${title}</span>`;
-            
-            item.onclick = () => {
-                try {
-                    const nickInput = document.getElementById('duel-friend-nick');
-                    const friendNick = nickInput ? nickInput.value.trim() : '';
-                    if (!friendNick) {
-                        alert('Введите ник друга!');
-                        if(nickInput) nickInput.focus();
-                        return;
-                    }
-                    
-                    const duelTitle = document.getElementById('duel-title').value;
-                    const duelDesc = document.getElementById('duel-desc').value;
-                    const rounds = document.getElementById('duel-rounds').value;
-                    const roundTime = document.getElementById('duel-time').value;
-
-                    window.targetFriend = friendNick;
-                    
-                    if (typeof socket === 'undefined') {
-                        alert('Ошибка: сокет не подключен!');
-                        return;
-                    }
-
-                    socket.emit('send_challenge', { 
-                        targetUser: window.targetFriend, 
-                        gameUrl: href, 
-                        gameTitle: title,
-                        title: duelTitle,
-                        description: duelDesc,
-                        rounds: rounds,
-                        roundTime: roundTime
-                    });
-
-                    alert('Вызов "${duelTitle}" отправлен!');
-                    document.getElementById('game-modal').style.display = 'none';
-                } catch (err) {
-                    alert('Ошибка отправки: ' + err.message);
-                }
-            };
-            
-            list.appendChild(item);
-        });
-        document.getElementById('game-modal').style.display = 'flex';
-    } catch (err) {
-        alert('Ошибка открытия модалки: ' + err.message);
-    }
-}
-
-function filterGames() {
-    const q = document.getElementById('search').value.toLowerCase().trim();
-    document.querySelectorAll('.game-card').forEach(c => c.style.display = c.getAttribute('data-name').toLowerCase().includes(q) ? 'flex' : 'none');
-}
-</script>
-
-
-    
-<div id="forgot-modal" class="modal" onclick="closeModal('forgot-modal', event)" style="display: none;">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 style="color: #58a6ff; margin-bottom: 5px;">🔑 Восстановление</h3>
-        <p style="font-size: 12px; color: #8b949e; margin-bottom: 10px;">Введите ваш Gmail, мы сгенерируем ссылку для сброса пароля прямо здесь.</p>
-        
-        <input type="email" id="reset-email" placeholder="Ваш Gmail" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px;">
-        
-        <!-- Капча из случайного примера -->
-        <div style="background: #161b22; padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #30363d;">
-            <p id="captcha-question" style="font-size: 13px; color: #c9d1d9; margin-bottom: 5px;"></p>
-            <input type="number" id="captcha-input" placeholder="Ответ" style="width: 100%; padding: 8px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px;">
-        </div>
-
-        <button onclick="verifyAndGetResetLink()" style="width: 100%; padding: 10px; background: #238636; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 10px;">Получить ссылку</button>
-        
-        <!-- Блок, куда выведется ссылка -->
-        <div id="reset-result-box" style="display: none; background: #161b22; padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #30363d; font-size: 12px; word-break: break-all;"></div>
-
-        <button onclick="closeModal('forgot-modal', event)" style="width: 100%; padding: 8px; background: transparent; color: #8b949e; border: none; cursor: pointer;">Назад ко входу</button>
-    </div>
-
-<div class="games-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 20px;">
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-</div>
-</div>
-
-<!-- Модальное окно входа по нику -->
-<div id="nickname-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(13,17,23,0.95); z-index:9999; justify-content:center; align-items:center;">
-    <div style="background:#161b22; border:1px solid #30363d; padding:25px; border-radius:12px; width:320px; text-align:center;">
-        <h3 style="color:#f0f6fc; margin-bottom:10px;">🎮 Вход на портал</h3>
-        <p style="color:#8b949e; font-size:13px; margin-bottom:15px;">Введи ник для быстрого доступа:</p>
-        <input type="text" id="nickname-input" placeholder="Твой ник..." style="width:100%; padding:10px; background:#0d1117; border:1px solid #30363d; color:white; border-radius:6px; box-sizing:border-box; margin-bottom:10px; outline:none;">
-        <div id="nickname-error" style="color:#f85149; font-size:12px; margin-bottom:10px; display:none;"></div>
-        <button onclick="saveNickname()" style="width:100%; padding:10px; background:#238636; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-bottom:12px;">Войти</button>
-        
-        <!-- Ссылки под зеленой кнопкой -->
-        <div style="border-top:1px solid #30363d; padding-top:12px; font-size:13px; display:flex; flex-direction:column; gap:8px;">
-            <a href="login.html" style="color:#58a6ff; text-decoration:none;">Войти в аккаунт</a>
-            <a href="login.html" style="color:#3fb950; text-decoration:none;">Создать аккаунт</a>
-        </div>
-    </div>
-</div>
-
-<!-- Панель управления (Админка) -->
-<div id="admin-panel" style="display:none; background:#161b22; border:1px solid #30363d; padding:20px; border-radius:12px; margin:20px auto; max-width:900px; color:#c9d1d9;">
-    <h3 style="color:#58a6ff; margin-top:0;">🛡️ Панель Администратора</h3>
-    <p style="font-size:13px; color:#8b949e;">Список всех игроков на портале, управление банами и ролями:</p>
-    <div style="overflow-x:auto;">
-        <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:left;">
-            <thead>
-                <tr style="border-bottom:1px solid #30363d; color:#8b949e;">
-                    <th style="padding:8px;">Игрок</th>
-                    <th style="padding:8px;">Роль</th>
-                    <th style="padding:8px;">Статус</th>
-                    <th style="padding:8px;">Действия</th>
-                </tr>
-            </thead>
-            <tbody id="admin-users-list">
-                <tr><td colspan="4" style="padding:10px; text-align:center;">Загрузка...</td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    const savedNick = localStorage.getItem("portal_nickname");
-    if (!savedNick) {
-        document.getElementById("nickname-modal").style.display = "flex";
-    } else {
-        checkAndRegister(savedNick);
-    }
-});
-
-function saveNickname() {
-    const nick = document.getElementById("nickname-input").value.trim();
-    const errBox = document.getElementById("nickname-error");
-    if (!nick) {
-        errBox.innerText = "Введите ник!";
-        errBox.style.display = "block";
-        return;
-    }
-    fetch("/api/check-nickname", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nickname: nick })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            localStorage.setItem("portal_nickname", data.nickname);
-            localStorage.setItem("portal_role", data.role);
-            document.getElementById("nickname-modal").style.display = "none";
-            location.reload();
-        } else {
-            errBox.innerText = data.error;
-            errBox.style.display = "block";
-        }
-    });
-}
-
-function checkAndRegister(nick) {
-    fetch("/api/check-nickname", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nickname: nick })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (!data.success) {
-            alert(data.error);
-            localStorage.removeItem("portal_nickname");
-            location.reload();
-            return;
-        }
-        localStorage.setItem("portal_role", data.role);
-        if (data.role === "Создатель" || data.role === "Админ") {
-            document.getElementById("admin-panel").style.display = "block";
-            loadAdminPanel();
-            setInterval(loadAdminPanel, 5000);
-        }
-    });
-}
-
-function loadAdminPanel() {
-    fetch("/api/admin/users")
-    .then(res => res.json())
-    .then(data => {
-        const tbody = document.getElementById("admin-users-list");
-        if (!data.users || data.users.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='4' style='padding:10px; text-align:center;'>Нет игроков онлайн</td></tr>";
-            return;
-        }
-        tbody.innerHTML = data.users.map(u => `
-            <tr style="border-bottom:1px solid #21262d;">
-                <td style="padding:8px; font-weight:bold; color:#f0f6fc;">${u.name}</td>
-                <td style="padding:8px; color:#58a6ff;">${u.role}</td>
-                <td style="padding:8px;">${u.isBanned ? "<span style='color:#f85149;'>Забанен</span>" : "<span style='color:#3fb950;'>Активен</span>"}</td>
-                <td style="padding:8px;">
-                    <button onclick="adminAction('${u.name}', 'kick')" style="background:#d29922; color:black; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; margin-right:4px;">Кик</button>
-                    ${u.isBanned ? 
-                        `<button onclick="adminAction('${u.name}', 'unban')" style="background:#238636; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; margin-right:4px;">Разбан</button>` :
-                        `<button onclick="promptBan('${u.name}')" style="background:#f85149; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; margin-right:4px;">Бан</button>`
-                    }
-                    <button onclick="promptRole('${u.name}')" style="background:#1f6feb; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Роль</button>
-                </td>
-            </tr>
-        `).join("");
-    });
-}
-
-function adminAction(target, action, dtype = "", dval = "", role = "") {
-    fetch("/api/admin/action", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetNick: target, action, durationType: dtype, durationValue: dval, newRole: role })
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert(data.message || data.error);
-        loadAdminPanel();
-    });
-}
-
-function promptBan(target) {
-    const val = prompt("На сколько банить? (укажи число, например: 30)");
-    if (!val) return;
-    const type = prompt("Тип времени: sec (секунды), min (минуты), hour (часы), day (дни)", "min");
-    if (!type) return;
-    adminAction(target, "ban", type, val);
-}
-
-function promptRole(target) {
-    const role = prompt("Введи новую роль (Создатель, Админ, VIP, Игрок):", "VIP");
-    if (!role) return;
-    adminAction(target, "set-role", "", "", role);
-}
-</script>
-
-
-<div style="max-width: 900px; margin: 25px auto 15px auto; padding: 0 15px;">
-    <h3 style="color: #58a6ff; font-size: 16px; margin-bottom: 12px; border-left: 3px solid #58a6ff; padding-left: 8px;">🔥 НОВЫЕ ТОПОВЫЕ ИГРЫ</h3>
-    <div class="games-grid">
-    <a href="/cyberjump/" class="game-card">⚡ Кибер-Прыг</a>
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-        
-    </div>
-</div>
-
-
-<script>
-async function openClientManagement() {
-    try {
-        const response = await fetch('/api/admin/users');
-        const data = await response.json();
-        if (!data.success) { alert('Ошибка доступа!'); return; }
-
-        let modal = document.getElementById('adminModal');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'adminModal';
-            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:1000;';
-            document.body.appendChild(modal);
-        }
-
-        let usersHtml = data.users.map(u => \`
-            <div style="background:#1e293b; padding: 10px; margin-bottom: 8px; border-radius: 8px; display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <strong>\${u.username}</strong> <br>
-                    <small style="color:#94a3b8;">Гемы: <span id="gems-\${u.username}">\${u.gems}</span></small>
-                </div>
-                <div>
-                    <input type="number" id="input-\${u.username}" value="100" style="width: 70px; padding: 5px; background:#0f172a; border:1px solid #58a6ff; color:white; border-radius:4px;">
-                    <button onclick="grantGems('\${u.username}')" style="background:#3b82f6; color:white; border:none; padding: 6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">💎 Выдать</button>
-                </div>
-            </div>
-        \`).join('');
-
-        modal.innerHTML = \`
-            <div style="background:#0f172a; border:2px solid #58a6ff; padding:20px; border-radius:12px; width:90%; max-width:500px; max-height:80vh; overflow-y:auto;">
-                <h2 style="color:#58a6ff; margin-top:0;">" onclick="openClientManagement()</button></h2>
-                <div style="margin-bottom: 15px;">\${usersHtml}</div>
-                <button onclick="document.getElementById('adminModal').remove()" style="background:#ef4444; color:white; border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Закрыть</button>
-            </div>
-        \`;
-    } catch (e) {
-        console.error(e);
-        alert('Не удалось загрузить список клиентов');
-    }
-}
-
-async function grantGems(targetUsername) {
-    const amount = Number(document.getElementById(\`input-\${targetUsername}\`).value);
-    const response = await fetch('/api/admin/update-gems', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminUsername: 'mikail0vic', targetUsername, gemsAmount: amount })
-    });
-    const result = await response.json();
-    if (result.success) {
-        document.getElementById(\`gems-\${targetUsername}\`).innerText = result.newGems;
-        alert(\`Успешно! У игрока \${targetUsername} теперь \${result.newGems} алмазов.\`);
-    } else {
-        alert('Ошибка: ' + result.message);
-    }
-}
-
-
-</script>
-
-
-
-
-<!-- Ультра-модальное окно создания турнира -->
-<div id="tournamentModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(5, 5, 10, 0.85); backdrop-filter: blur(8px); z-index:9999; justify-content:center; align-items:center;">
-    <div style="background: linear-gradient(145deg, #12121e, #1a1a2e); border: 2px solid #f59e0b; padding: 25px; border-radius: 16px; width: 92%; max-width: 480px; color: white; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(245, 158, 11, 0.3);">
-        
-        <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="margin: 0; color: #f59e0b; font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                🏆 Панель Создателя Турнира
-            </h2>
-            <p style="margin: 5px 0 0 0; font-size: 13px; color: #888;">Настройте параметры киберспортивного события</p>
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-            <label style="font-size: 13px; color: #aaa; display: block; margin-bottom: 5px;">Название турнира:</label>
-            <input type="text" id="tNameInput" value="Киберкубок #1" style="width: 100%; padding: 12px; background: #0f0f18; border: 1px solid #333; color: white; border-radius: 8px; font-size: 15px; outline: none;">
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-            <label style="font-size: 13px; color: #aaa; display: block; margin-bottom: 5px;">Время проведения:</label>
-            <input type="text" id="tTimeInput" value="Сегодня в 19:00" style="width: 100%; padding: 12px; background: #0f0f18; border: 1px solid #333; color: white; border-radius: 8px; font-size: 15px; outline: none;">
-        </div>
-
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <div style="display: flex; gap: 10px; margin-top: 12px;">
             <div style="flex: 1;">
-                <label style="font-size: 13px; color: #aaa; display: block; margin-bottom: 5px;">Длительность раунда:</label>
-                <select id="tRoundDuration" style="width: 100%; padding: 12px; background: #0f0f18; border: 1px solid #333; color: white; border-radius: 8px; font-size: 14px; outline: none;">
-                    <option value="30 сек">30 секунд</option>
-                    <option value="1 мин">1 минута</option>
-                    <option value="2 мин">2 минуты</option>
-                    <option value="3 мин" selected>3 минуты</option>
-                    <option value="5 мин">5 минут</option>
-                    <option value="10 мин">10 минут</option>
+                <label style="font-size: 13px; color: #8b949e; display: block;">Время (ввод):</label>
+                <input type="text" id="tourn-time-input" placeholder="Например: 18:00" style="width: 100%; padding: 10px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: white; margin-top: 4px; box-sizing: border-box; font-size: 14px;">
+            </div>
+            <div style="flex: 1;">
+                <label style="font-size: 13px; color: #8b949e; display: block;">Часовой пояс (GMT):</label>
+                <select id="tourn-gmt-input" style="width: 100%; padding: 10px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: white; margin-top: 4px; box-sizing: border-box; font-size: 14px;">
+                    <option value="GMT-12">GMT-12</option>
+                    <option value="GMT-11">GMT-11</option>
+                    <option value="GMT-10">GMT-10</option>
+                    <option value="GMT-9">GMT-9</option>
+                    <option value="GMT-8">GMT-8</option>
+                    <option value="GMT-7">GMT-7</option>
+                    <option value="GMT-6">GMT-6</option>
+                    <option value="GMT-5">GMT-5</option>
+                    <option value="GMT-4">GMT-4</option>
+                    <option value="GMT-3">GMT-3</option>
+                    <option value="GMT-2">GMT-2</option>
+                    <option value="GMT-1">GMT-1</option>
+                    <option value="GMT+0">GMT+0</option>
+                    <option value="GMT+1">GMT+1</option>
+                    <option value="GMT+2">GMT+2</option>
+                    <option value="GMT+3">GMT+3</option>
+                    <option value="GMT+4" selected>GMT+4 (Баку)</option>
+                    <option value="GMT+5">GMT+5</option>
+                    <option value="GMT+6">GMT+6</option>
+                    <option value="GMT+7">GMT+7</option>
+                    <option value="GMT+8">GMT+8</option>
+                    <option value="GMT+9">GMT+9</option>
+                    <option value="GMT+10">GMT+10</option>
+                    <option value="GMT+11">GMT+11</option>
+                    <option value="GMT+12">GMT+12</option>
+                    <option value="GMT+13">GMT+13</option>
+                    <option value="GMT+14">GMT+14</option>
                 </select>
             </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 12px;">
             <div style="flex: 1;">
-                <label style="font-size:13px; color:#aaa; display: block; margin-bottom: 5px;">Кол-во раундов:</label>
-                <input type="number" id="tRoundsInput" value="3" min="1" max="10" style="width: 100%; padding: 12px; background: #0f0f18; border: 1px solid #333; color: white; border-radius: 8px; font-size: 15px; outline: none;">
+                <label style="font-size: 13px; color: #8b949e; display: block;">Кол-во раундов:</label>
+                <input type="text" id="tourn-rounds-input" placeholder="Например: 5" style="width: 100%; padding: 10px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: white; margin-top: 4px; box-sizing: border-box; font-size: 14px;">
+            </div>
+            <div style="flex: 1;">
+                <label style="font-size: 13px; color: #8b949e; display: block;">Длительность раунда:</label>
+                <input type="text" id="tourn-duration-input" placeholder="До 10 мин (напр: 3 мин)" style="width: 100%; padding: 10px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: white; margin-top: 4px; box-sizing: border-box; font-size: 14px;">
             </div>
         </div>
-        
-        <div style="background: #161622; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #252535;">
-            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: bold; color: #f59e0b; font-size: 14px;">
-                <input type="checkbox" id="selectAllGames" onchange="toggleAllGames(this)" style="width: 18px; height: 18px; accent-color: #f59e0b; cursor: pointer;"> Выбрать ВСЕ игры портала
-            </label>
+
+        <label style="font-size: 13px; color: #8b949e; display: block; margin-top: 14px;">Выбор игр (от 1 до всех):</label>
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px; margin-bottom: 6px;">
+            <input type="checkbox" id="select-all-games-chk" onclick="toggleAllTournGames(this)" style="width: 16px; height: 16px; accent-color: #58a6ff; cursor: pointer;">
+            <label for="select-all-games-chk" style="font-size: 13px; color: #58a6ff; font-weight: bold; cursor: pointer;">Выбрать все игры</label>
+        </div>
+        <div id="modal-tourn-games-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto; background: #0d1117; padding: 8px; border-radius: 8px; border: 1px solid #30363d;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;"><input type="checkbox" name="tourn-game" value="Кибер-Хакер" style="accent-color: #58a6ff;"> Кибер-Хакер</label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;"><input type="checkbox" name="tourn-game" value="Космический бур" style="accent-color: #58a6ff;"> Космический бур</label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;"><input type="checkbox" name="tourn-game" value="Слид-Дрифт" style="accent-color: #58a6ff;"> Слид-Дрифт</label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;"><input type="checkbox" name="tourn-game" value="Магическая Алхимия" style="accent-color: #58a6ff;"> Магическая Алхимия</label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;"><input type="checkbox" name="tourn-game" value="Catcher" style="accent-color: #58a6ff;"> Catcher</label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;"><input type="checkbox" name="tourn-game" value="Кликер" style="accent-color: #58a6ff;"> Кликер</label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;"><input type="checkbox" name="tourn-game" value="Цветная Игра" style="accent-color: #58a6ff;"> Цветная Игра</label>
         </div>
 
-        <label style="font-size: 13px; color: #aaa; display: block; margin-bottom: 5px;">Игры турнира:</label>
-        <div id="gamesCheckboxesList" style="max-height: 140px; overflow-y: auto; background: #0f0f18; padding: 10px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
-            <!-- Список игр -->
-        </div>
-
-        <div style="display: flex; gap: 12px;">
-            <button onclick="submitTournamentForm()" style="flex: 1; background: linear-gradient(135deg, #22c55e, #16a34a); color: white; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);">Создать турнир</button>
-            <button onclick="closeTournamentModal()" style="flex: 1; background: #ef4444; color: white; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);">Отмена</button>
+        <div style="display: flex; gap: 10px; margin-top: 18px;">
+            <button onclick="submitCreateTournament()" style="flex: 1; background: #238636; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;">🚀 Запустить</button>
+            <button onclick="closeModal('tournament-modal')" style="flex: 1; background: #30363d; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;">Отмена</button>
         </div>
     </div>
 </div>
-
-<script>
-const allPortalGames = [
-    "Cyberjump", "Clicker", "Drift", "Drill", "Alchemy", 
-    "Hacker", "Hangman", "Matrix", "Memory", "Quiz", 
-    "Roulette", "RPS", "Catcher", "Color Game", "Dice Roller", "Rhythm"
-];
-
-function openTournamentModal() {
-    let currentUser = localStorage.getItem("currentUser") || "mikail0vic";
-    if (currentUser !== "mikail0vic") {
-        alert("Доступ запрещен! Только Создатель (mikail0vic) может создавать турниры.");
-        return;
-    }
-
-    let listContainer = document.getElementById("gamesCheckboxesList");
-    listContainer.innerHTML = "";
-    allPortalGames.forEach((game) => {
-        listContainer.innerHTML += `
-            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #ddd; padding: 4px 0;">
-                <input type="checkbox" class="game-checkbox" value="${game}" style="width: 16px; height: 16px; accent-color: #f59e0b; cursor: pointer;"> ${game}
-            </label>
-        `;
-    });
-    document.getElementById("tournamentModal").style.display = "flex";
-}
-
-function closeTournamentModal() {
-    document.getElementById("tournamentModal").style.display = "none";
-}
-
-function toggleAllGames(masterCheckbox) {
-    let checkboxes = document.querySelectorAll(".game-checkbox");
-    checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
-}
-
-async function submitTournamentForm() {
-    const titleInput = document.getElementById("tourn-title") || document.getElementById("tournament-title") || document.querySelector("input[type='text']");
-    // Если на форме есть конкретные инпуты, ищем их по порядку или классам
-    const titleField = document.getElementById("tourn-title") || document.querySelector(".modal-content input") || document.querySelector("input");
-    
-    // Ищем точное поле названия турнира в модалке
-    let nameVal = "";
-    const allInputs = document.querySelectorAll("#tournament-modal input, .modal input");
-    for(let inp of allInputs) {
-        if(inp.value && inp.value.trim() !== "" && inp.type === "text") {
-            nameVal = inp.value.trim();
-            break;
-        }
-    }
-    
-    if (!nameVal) {
-        nameVal = "Кибертурнир #1";
-    }
-
-    const duration = document.getElementById("tourn-duration") ? document.getElementById("tourn-duration").value : "3";
-    const rounds = document.getElementById("tourn-rounds") ? document.getElementById("tourn-rounds").value : "3";
-
-    socket.emit("create_tournament", {
-        title: nameVal,
-        name: nameVal,
-        duration: duration,
-        rounds: rounds
-    });
-
-    alert("Турнир "" + nameVal + "" успешно создан!");
-    closeModal("tournament-modal");
-});
-
-    if (!name) { alert("Введите название турнира!"); return; }
-    if (selectedGames.length === 0) { alert("Выберите хотя бы одну игру!"); return; }
-
-    let res = await fetch("/api/admin/create-tournament", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-            adminUsername: "mikail0vic", 
-            name: name, 
-            time: time, 
-            roundDuration: roundDuration,
-            rounds: rounds, 
-            games: selectedGames 
-        })
-    });
-    let data = await res.json();
-    if (data.success) {
-        alert("Турнир успешно создан!");
-        location.reload();
-    } else {
-        alert("Ошибка: " + (data.message || "Не удалось создать"));
-    }
-}
-</script>
-
-
-<!-- Модальное окно Управления клиентами -->
-<div id="clientsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(5, 5, 10, 0.85); backdrop-filter: blur(8px); z-index:9999; justify-content:center; align-items:center;">
-    <div style="background: linear-gradient(145deg, #12121e, #1a1a2e); border: 2px solid #a855f7; padding: 25px; border-radius: 16px; width: 95%; max-width: 600px; color: white; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(168, 85, 247, 0.3);">
-        
-        <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="margin: 0; color: #a855f7; font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                🛡️ Управление клиентами портала
-            </h2>
-            <p style="margin: 5px 0 0 0; font-size: 13px; color: #888;">Панель администратора (Создатель)</p>
-        </div>
-
-        <div id="clientsListContainer" style="display: flex; flex-direction: column; gap: 12px; max-height: 50vh; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
-            <!-- Список игроков подгружается динамически -->
-        </div>
-
-        <button onclick="closeClientsModal()" style="width: 100%; background: #ef4444; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px;">Закрыть</button>
-    </div>
-</div>
-
-<script>
-async function openClientsModal() {
-    let currentUser = localStorage.getItem("currentUser") || "mikail0vic";
-    if (currentUser !== "mikail0vic") {
-        alert("Доступ запрещен! Только Создатель может управлять клиентами.");
-        return;
-    }
-
-    let res = await fetch("/api/admin/get-users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adminUsername: "mikail0vic" })
-    });
-    let data = await res.json();
-    
-    if (data.success) {
-        let container = document.getElementById("clientsListContainer");
-        container.innerHTML = "";
-        
-        if (data.users.length === 0) {
-            container.innerHTML = "<p style='text-align:center; color:#888;'>Пока нет зарегистрированных игроков.</p>";
-        }
-
-        data.users.forEach(u => {
-            container.innerHTML += `
-                <div style="background: #161622; border: 1px solid #2a2a3d; padding: 15px; border-radius: 10px; display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: bold; color: #f59e0b; font-size: 16px;">👤 ${u.username}</span>
-                        <span style="font-size: 13px; color: ${u.banned ? '#ef4444' : '#22c55e'};">${u.banned ? '🔴 Забанен' : '🟢 Активен'}</span>
-                    </div>
-                    <div style="font-size: 13px; color: #aaa;">
-                        💰 Монеты: <b>${u.coins}</b> | 💎 Алмазы: <b>${u.diamonds}</b>
-                    </div>
-                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px;">
-                        <button onclick="manageUserAction('${u.username}', 'add_coins')" style="background: #eab308; color: #000; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">+ Валюта</button>
-                        <button onclick="manageUserAction('${u.username}', 'temp_ban')" style="background: #f97316; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">⏱ Бан на время</button>
-                        <button onclick="manageUserAction('${u.username}', 'ban')" style="background: #dc2626; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">⛔ Бан</button>
-                        <button onclick="manageUserAction('${u.username}', 'game_ban')" style="background: #991b1b; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">🎮 Бан из игры</button>
-                        <button onclick="manageUserAction('${u.username}', 'kick')" style="background: #ca8a04; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">👢 Кик</button>
-                        <button onclick="manageUserAction('${u.username}', 'unban')" style="background: #16a34a; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">✅ Разбан</button>
-                    </div>
-                </div>
-            `;
-        });
-    }
-
-    document.getElementById("clientsModal").style.display = "flex";
-}
-
-function closeClientsModal() {
-    document.getElementById("clientsModal").style.display = "none";
-}
-
-async function manageUserAction(targetUser, action) {
-    let value = 0;
-    if (action === "add_coins") {
-        let amount = prompt("Сколько монеты/алмазов выдать?", "1000");
-        if (!amount) return;
-        value = amount;
-        action = prompt("Нажмите OK для монеты, Отмена для алмазов") ? "add_coins" : "add_diamonds";
-    } else if (action === "temp_ban") {
-        let mins = prompt("Введите длительность бана в минутах:", "10");
-        if (!mins) return;
-        value = mins;
-    }
-
-    let res = await fetch("/api/admin/manage-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adminUsername: "mikail0vic", targetUser, action, value })
-    });
-    let data = await res.json();
-    if (data.success) {
-        alert("Действие успешно выполнено!");
-        openClientsModal();
-    } else {
-        alert("Ошибка: " + data.message);
-    }
-}
-
-// Настраиваем фиолетовую кнопку управления клиентами
-document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll("button, div").forEach(el => {
-        let text = el.innerText || "";
-        let isPurple = window.getComputedStyle(el).backgroundColor.includes("168, 85, 247") || el.style.background.includes("purple") || el.style.background.includes("a855f7") || el.innerHTML.includes("🛡️");
-        
-        if (isPurple || (el.tagName === "BUTTON" && (text.includes("Управление") || text.trim() === ""))) {
-            if (el.tagName === "BUTTON" || el.style.cursor === "pointer" || el.onclick) {
-                el.innerText = "🛡️ Управление клиентами";
-                el.style.background = "#a855f7";
-                el.style.color = "white";
-                el.style.fontWeight = "bold";
-                el.style.padding = "12px";
-                el.style.borderRadius = "8px";
-                el.style.border = "none";
-                el.style.cursor = "pointer";
-                el.style.width = "100%";
-                
-                el.onclick = (e) => {
-                    e.preventDefault();
-                    let currentUser = localStorage.getItem("currentUser") || "mikail0vic";
-                    if (currentUser !== "mikail0vic") {
-                        alert("Доступ запрещен! Только Создатель может открывать эту панель.");
-                        return;
-                    }
-                    openClientsModal();
-                };
-            }
-        }
-    });
-});
-</script>
-
-
-<script>
-document.addEventListener("click", function(e) {
-    if (e.target && (e.target.id === "submit-tourn-btn" || e.target.innerText === "Создать турнир")) {
-        const titleInput = document.getElementById("tourn-title-input") || document.querySelector("#tournament-modal input[type='text']");
-        const nameVal = titleInput ? titleInput.value.trim() : "";
-        
-        if (!nameVal) {
-            alert("Введите название турнира!");
-            return;
-        }
-
-        const duration = "3";
-        const rounds = "3";
-
-        if (typeof socket !== "undefined") {
-            socket.emit("create_tournament", {
-                title: nameVal,
-                name: nameVal,
-                duration: duration,
-                rounds: rounds
-            });
-            alert("Турнир \"" + nameVal + "\" успешно создан!");
-            const modal = document.getElementById("tournament-modal");
-            if (modal) modal.style.display = "none";
-        } else {
-            alert("Ошибка: сокет не подключен!");
-        }
-    }
-});
-</script>
-
-
-<script>
-async function createTournamentDirect() {
-    const title = prompt("Введите название киберспортивного турнира:", "Турнир #1");
-    if (!title) return;
-    
-    try {
-        let res = await fetch("/api/admin/create-tournament", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title: title, name: title, gameUrl: "#" })
-        });
-        let data = await res.json();
-        alert(data.message || "Турнир создан!");
-        location.reload();
-    } catch (e) {
-        alert("Ошибка сети при создании турнира");
-    }
-}
-</script>
-
 
 <script>
 function openTournamentModal() {
@@ -1238,17 +401,31 @@ function openTournamentModal() {
     if (modal) modal.style.display = "flex";
 }
 
-function closeTournamentModal() {
-    const modal = document.getElementById("tournament-modal");
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
     if (modal) modal.style.display = "none";
 }
 
+function toggleAllTournGames(master) {
+    const checkboxes = document.querySelectorAll('input[name="tourn-game"]');
+    checkboxes.forEach(cb => cb.checked = master.checked);
+}
+
 async function submitCreateTournament() {
-    const titleInput = document.getElementById("tourn-title-input");
-    const title = titleInput ? titleInput.value.trim() : "";
+    const title = document.getElementById("tourn-title-input").value.trim();
+    const time = document.getElementById("tourn-time-input").value.trim();
+    const gmt = document.getElementById("tourn-gmt-input").value;
+    const rounds = document.getElementById("tourn-rounds-input").value.trim();
+    const duration = document.getElementById("tourn-duration-input").value.trim();
     
+    const selectedGames = Array.from(document.querySelectorAll('input[name="tourn-game"]:checked')).map(cb => cb.value);
+
     if (!title) {
         alert("Введите название турнира!");
+        return;
+    }
+    if (selectedGames.length === 0) {
+        alert("Выберите хотя бы одну игру!");
         return;
     }
 
@@ -1259,17 +436,21 @@ async function submitCreateTournament() {
             body: JSON.stringify({ 
                 adminUsername: "mikail0vic", 
                 title: title, 
-                name: title, 
+                name: title,
+                time: (time ? time : "18:00") + " (" + gmt + ")",
+                rounds: rounds ? rounds : "3",
+                roundDuration: duration ? duration : "1 мин",
+                games: selectedGames,
                 gameUrl: "#" 
             })
         });
         let d = await res.json();
         if (d.success) {
-            alert("Турнир успешно создан!");
-            closeTournamentModal();
+            alert("Турнир успешно запущен!");
+            closeModal('tournament-modal');
             location.reload();
         } else {
-            alert("Ошибка: " + (d.message || d.error || "Неизвестно"));
+            alert("Ошибка: " + (d.message || d.error || "Доступ запрещен"));
         }
     } catch (err) {
         alert("Ошибка сети: " + err);
