@@ -54,7 +54,7 @@ function doLogin() {
     }
 
     if (userAnswer !== correctAnswer) {
-        alert('❌ Ошибка рекапчи! Неверный ответ на пример.');
+        alert('❌ Ошибка рекапчи! Твой ответ: ' + userAnswer + ', а правильный был: ' + correctAnswer);
         generateCaptcha();
         document.getElementById('captcha-answer').value = '';
         return;
@@ -72,12 +72,12 @@ function doLogin() {
             localStorage.setItem("currentUser", usernameToSave);
             window.location.href = "/";
         } else {
-            alert(data.error || 'Ошибка входа');
+            alert('⚠️ ОШИБКА СЕРВЕРА: ' + (data.error || 'Неизвестная ошибка'));
             generateCaptcha();
         }
     })
     .catch(err => {
-        alert("Ошибка сети при входе: " + err);
+        alert("⚠️ Ошибка сети: " + err);
         generateCaptcha();
     });
 }
