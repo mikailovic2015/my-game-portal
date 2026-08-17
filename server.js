@@ -128,7 +128,10 @@ app.post('/api/login', (req, res) => {
     }
 
     req.session.user = { email: user.email, username: user.username, role: user.role || 'player' };
-    res.json({ success: true, user: req.session.user });
+    req.session.save((err) => {
+        if (err) console.log("Session save error:", err);
+        res.json({ success: true, user: req.session.user });
+    });
 });
 
 app.get('/api/me', (req, res) => {
