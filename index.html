@@ -1178,6 +1178,38 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
+
+<script>
+document.addEventListener("click", function(e) {
+    if (e.target && (e.target.id === "submit-tourn-btn" || e.target.innerText === "Создать турнир")) {
+        const titleInput = document.getElementById("tourn-title-input") || document.querySelector("#tournament-modal input[type='text']");
+        const nameVal = titleInput ? titleInput.value.trim() : "";
+        
+        if (!nameVal) {
+            alert("Введите название турнира!");
+            return;
+        }
+
+        const duration = "3";
+        const rounds = "3";
+
+        if (typeof socket !== "undefined") {
+            socket.emit("create_tournament", {
+                title: nameVal,
+                name: nameVal,
+                duration: duration,
+                rounds: rounds
+            });
+            alert("Турнир \"" + nameVal + "\" успешно создан!");
+            const modal = document.getElementById("tournament-modal");
+            if (modal) modal.style.display = "none";
+        } else {
+            alert("Ошибка: сокет не подключен!");
+        }
+    }
+});
+</script>
+
 </body>
 </html>
 
