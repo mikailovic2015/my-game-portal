@@ -70,7 +70,8 @@ function doLogin() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            localStorage.setItem("currentUser", data.username || data.user || email);
+            const uname = data.username || (data.user && (data.user.username || data.user.email)) || email;
+            localStorage.setItem("currentUser", uname);
             window.location.href = "/";
         } else {
             alert(data.error || 'Ошибка входа');
