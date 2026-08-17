@@ -253,6 +253,7 @@ app.post('/api/admin/create-tournament', (req, res) => {
     const tournament = { title, gameUrl, description: description || 'Сразись за звание лучшего киберспортсмена!', createdAt: Date.now() };
     saveData(TOURNAMENT_FILE, tournament);
     io.emit('new_tournament_announced', tournament);
+    res.json({ success: true, message: "Турнир успешно создан!" });
     res.json({ success: true, message: 'Турнир успешно запущен!' });
 });
 
